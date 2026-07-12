@@ -14,18 +14,28 @@
     <script src="https://unpkg.com/element-plus"></script>
     <!-- 引入 阿里云 OSS SDK -->
     <script src="https://gosspublic.alicdn.com/aliyun-oss-sdk-6.17.1.min.js"></script>
-    <!-- 引入图标 -->
-    <link rel="stylesheet" href="https://unpkg.com/@element-plus/icons-vue"></link>
     <style>
-        .el-card { --el-card-padding: 12px; }
+        /* 深度淡蓝背景定制 */
+        body {
+            background-color: #f0f6fa;
+        }
+        .el-card { 
+            --el-card-padding: 12px; 
+            border-radius: 10px;
+            border: 1px solid #e1ebf4;
+        }
+        /* 定制输入框和选择框圆角 */
+        .el-input__wrapper, .el-select {
+            border-radius: 6px;
+        }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="text-gray-800">
     <div id="app" class="pb-12">
         <!-- 导航栏 -->
-        <header class="bg-white shadow-sm sticky top-0 z-50">
+        <header class="bg-white/80 backdrop-blur shadow-sm sticky top-0 z-50 border-b border-blue-100">
             <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-                <h1 class="text-xl font-bold text-indigo-600 flex items-center gap-2">
+                <h1 class="text-xl font-bold text-blue-600 flex items-center gap-2">
                     <span>🧸 BJD 个人收纳账本</span>
                 </h1>
                 <div class="flex gap-2">
@@ -44,27 +54,31 @@
             <el-alert v-if="!isOssConfigured" title="请先配置阿里云 OSS，否则数据无法同步和保存。" type="warning" show-icon :closable="false" class="mb-6"></el-alert>
 
             <!-- 数据统计面板 -->
-            <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                    <p class="text-sm text-gray-500">总计物品</p>
-                    <p class="text-2xl font-bold mt-1 text-gray-800">{{ stats.totalCount }} 件</p>
+            <section class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-blue-100/50">
+                    <p class="text-xs text-gray-500">总计物品</p>
+                    <p class="text-xl font-bold mt-1 text-gray-800">{{ stats.totalCount }} 件</p>
                 </div>
-                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                    <p class="text-sm text-gray-500">总计开销</p>
-                    <p class="text-2xl font-bold mt-1 text-red-500">¥ {{ stats.totalCost }}</p>
+                <div class="bg-blue-50/50 p-4 rounded-xl shadow-sm border border-blue-100">
+                    <p class="text-xs text-blue-600 font-medium">已付定金总额</p>
+                    <p class="text-xl font-bold mt-1 text-blue-600">¥ {{ stats.paidDeposit }}</p>
                 </div>
-                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                    <p class="text-sm text-gray-500">制作中/等待中</p>
-                    <p class="text-2xl font-bold mt-1 text-orange-500">{{ stats.waitingCount }} 件</p>
+                <div class="bg-orange-50/50 p-4 rounded-xl shadow-sm border border-orange-100">
+                    <p class="text-xs text-orange-600 font-medium">待付尾款总额</p>
+                    <p class="text-xl font-bold mt-1 text-orange-600">¥ {{ stats.pendingBalance }}</p>
                 </div>
-                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                    <p class="text-sm text-gray-500">已到家</p>
-                    <p class="text-2xl font-bold mt-1 text-green-600">{{ stats.arrivedCount }} 件</p>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-blue-100/50">
+                    <p class="text-xs text-gray-500">制作中/排单</p>
+                    <p class="text-xl font-bold mt-1 text-indigo-500">{{ stats.waitingCount }} 件</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-blue-100/50 col-span-2 md:col-span-1">
+                    <p class="text-xs text-gray-500">已到家</p>
+                    <p class="text-xl font-bold mt-1 text-green-600">{{ stats.arrivedCount }} 件</p>
                 </div>
             </section>
 
             <!-- 筛选与搜索 -->
-            <section class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6 flex flex-wrap gap-3 items-center">
+            <section class="bg-white p-4 rounded-xl shadow-sm border border-blue-100/50 mb-6 flex flex-wrap gap-3 items-center">
                 <el-input v-model="filters.keyword" placeholder="搜索名称、品牌、备注..." class="max-w-xs" clearable></el-input>
                 <el-select v-model="filters.category" placeholder="分类" clearable class="w-32">
                     <el-option v-for="item in categories" :key="item" :label="item" :value="item"></el-option>
@@ -75,23 +89,23 @@
                 <el-select v-model="filters.status" placeholder="状态" clearable class="w-32">
                     <el-option v-for="item in statuses" :key="item" :label="item" :value="item"></el-option>
                 </el-select>
-                <el-button @click="resetFilters" size="small" type="text">重置筛选</el-button>
+                <el-button @click="resetFilters" size="small" type="text" class="text-blue-500">重置筛选</el-button>
             </section>
 
             <!-- 列表展示 -->
             <div v-loading="loading" element-loading-text="正在同步OSS数据...">
-                <div v-if="filteredList.length === 0" class="text-center py-12 text-gray-400 bg-white rounded-lg shadow-sm">
+                <div v-if="filteredList.length === 0" class="text-center py-12 text-gray-400 bg-white rounded-xl shadow-sm border border-blue-50">
                     暂无数据，请点击右上角“新增记录”开始录入。
                 </div>
                 <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    <el-card v-for="item in filteredList" :key="item.id" class="relative group hover:shadow-md transition">
+                    <el-card v-for="item in filteredList" :key="item.id" class="relative group hover:shadow-md transition bg-white">
                         <!-- 物品图片 -->
                         <div class="aspect-square bg-gray-100 rounded-md overflow-hidden relative mb-3">
                             <img v-if="item.imageUrl" :src="item.imageUrl" class="w-full h-full object-cover" />
-                            <div v-else class="w-full h-full flex flex-col items-center justify-content justify-center text-gray-300 text-xs">
-                                <span>No Image</span>
+                            <div v-else class="w-full h-full flex flex-col items-center justify-center text-gray-300 text-xs">
+                                <span>暂无图片</span>
                             </div>
-                            <span class="absolute top-2 left-2 px-2 py-0.5 bg-black/60 text-white text-xs rounded">
+                            <span class="absolute top-2 left-2 px-2 py-0.5 bg-blue-600/80 text-white text-xs rounded">
                                 {{ item.category }}
                             </span>
                         </div>
@@ -99,14 +113,26 @@
                         <!-- 物品信息 -->
                         <div>
                             <div class="flex justify-between items-start gap-1">
-                                <h3 class="font-bold text-gray-800 truncate flex-1">{{ item.name }}</h3>
+                                <h3 class="font-bold text-gray-800 truncate flex-1" :title="item.name">{{ item.name }}</h3>
                                 <span class="text-xs font-bold px-1.5 py-0.5 rounded" :class="getStatusClass(item.status)">
                                     {{ item.status }}
                                 </span>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">尺寸: {{ item.size || '未录入' }}</p>
-                            <p class="text-lg font-bold text-red-500 mt-2">¥ {{ item.price || 0 }}</p>
-                            <p v-if="item.remark" class="text-xs text-gray-400 mt-1 truncate" :title="item.remark">
+                            <p class="text-xs text-gray-500 mt-1">尺寸: <span class="text-blue-600 font-medium">{{ item.size || '未录入' }}</span></p>
+                            
+                            <!-- 价格分栏显示 -->
+                            <div class="grid grid-cols-2 gap-1 bg-blue-50/40 p-2 rounded-md mt-2 text-xs">
+                                <div>
+                                    <span class="text-gray-400 block scale-90 origin-left">已付定金</span>
+                                    <span class="font-bold text-blue-600">¥ {{ item.deposit || 0 }}</span>
+                                </div>
+                                <div class="border-l border-blue-100/50 pl-2">
+                                    <span class="text-gray-400 block scale-90 origin-left">待付尾款</span>
+                                    <span class="font-bold text-orange-500">¥ {{ item.balance || 0 }}</span>
+                                </div>
+                            </div>
+
+                            <p v-if="item.remark" class="text-xs text-gray-400 mt-2 truncate" :title="item.remark">
                                 备注: {{ item.remark }}
                             </p>
                         </div>
@@ -133,13 +159,19 @@
                     <el-input v-model="form.name" placeholder="请输入玩偶名称或品牌"></el-input>
                 </el-form-item>
                 <el-form-item label="尺寸">
-                    <el-select v-model="form.size" filterable allow-create class="w-full" placeholder="请选择或输入">
+                    <el-select v-model="form.size" filterable allow-create class="w-full" placeholder="请选择或手动输入">
                         <el-option v-for="item in sizes" :key="item" :label="item" :value="item"></el-option>
                     </el-select>
                 </el-form-item>
-                <el-form-item label="价格" required>
-                    <el-input-number v-model="form.price" :min="0" class="w-full" controls-position="right"></el-input-number>
+                
+                <!-- 价格拆分 -->
+                <el-form-item label="已付定金" required>
+                    <el-input-number v-model="form.deposit" :min="0" class="w-full" controls-position="right" placeholder="¥ 0.00"></el-input-number>
                 </el-form-item>
+                <el-form-item label="待付尾款" required>
+                    <el-input-number v-model="form.balance" :min="0" class="w-full" controls-position="right" placeholder="¥ 0.00"></el-input-number>
+                </el-form-item>
+
                 <el-form-item label="出货状态" required>
                     <el-select v-model="form.status" class="w-full">
                         <el-option v-for="item in statuses" :key="item" :label="item" :value="item"></el-option>
@@ -231,7 +263,8 @@
                     category: '娃头',
                     name: '',
                     size: '1/4',
-                    price: 0,
+                    deposit: 0,  // 定金
+                    balance: 0,  // 尾款
                     status: '已付定金',
                     imageUrl: '',
                     remark: ''
@@ -252,7 +285,7 @@
                                 accessKeyId: config.accessKeyId,
                                 accessKeySecret: config.accessKeySecret,
                                 bucket: config.bucket,
-                                secure: true // 使用 https
+                                secure: true
                             });
                             isOssConfigured.value = true;
                             return true;
@@ -269,20 +302,28 @@
                     if (!ossClient) return;
                     loading.value = true;
                     try {
-                        // 尝试下载 bjd_data.json
                         const result = await ossClient.get('bjd_data.json');
                         if (result && result.content) {
                             const decoder = new TextDecoder('utf-8');
                             const jsonStr = decoder.decode(result.content);
-                            bjdList.value = JSON.parse(jsonStr || '[]');
+                            const parsedData = JSON.parse(jsonStr || '[]');
+                            
+                            // 数据兼容性处理：若之前有单独的 price，转换为 deposit
+                            bjdList.value = parsedData.map(item => {
+                                if (item.price !== undefined && item.deposit === undefined) {
+                                    item.deposit = item.price;
+                                    item.balance = 0;
+                                    delete item.price;
+                                }
+                                return item;
+                            });
                         }
                     } catch (e) {
-                        // 找不到文件说明是新用户，初始化空数据
                         if (e.status === 404) {
                             bjdList.value = [];
-                            await saveToOSS(); // 初始化空文件
+                            await saveToOSS();
                         } else {
-                            ElMessage.error('无法同步数据，请检查OSS配置、权限及跨域设置。');
+                            ElMessage.error('无法同步数据，请确认OSS配置、权限及跨域设置。');
                             console.error(e);
                         }
                     } finally {
@@ -306,36 +347,31 @@
                     }
                 };
 
-                // 打开与配置设置
                 const openSettings = () => {
                     settingsVisible.value = true;
                 };
 
                 const saveSettings = async () => {
                     try {
-                        // 临时创建客户端进行测试
                         const tempClient = new OSS({
-                            region: ossConfig.value.region,
-                            accessKeyId: ossConfig.value.accessKeyId,
-                            accessKeySecret: ossConfig.value.accessKeySecret,
-                            bucket: ossConfig.value.bucket,
+                            region: ossConfig.value.region.trim(),
+                            accessKeyId: ossConfig.value.accessKeyId.trim(),
+                            accessKeySecret: ossConfig.value.accessKeySecret.trim(),
+                            bucket: ossConfig.value.bucket.trim(),
                             secure: true
                         });
-                        // 简单上传测试以校验凭证
                         const testBlob = new Blob(['test'], { type: 'text/plain' });
                         await tempClient.put('test_connection.txt', testBlob);
                         
-                        // 保存配置
                         localStorage.setItem('bjd_oss_config', JSON.stringify(ossConfig.value));
                         ossClient = tempClient;
                         isOssConfigured.value = true;
                         settingsVisible.value = false;
-                        ElMessage.success('OSS 配置验证成功并已保存！');
+                        ElMessage.success('OSS 配置验证成功！');
                         
-                        // 重新加载数据
                         await loadDataFromOSS();
                     } catch (e) {
-                        ElMessage.error('验证失败，请核对OSS各项参数和跨域(CORS)设置。');
+                        ElMessage.error('验证失败，请核对密钥拼写、没有首尾空格，以及CORS设置。');
                         console.error(e);
                     }
                 };
@@ -343,10 +379,21 @@
                 // 统计计算
                 const stats = computed(() => {
                     const totalCount = bjdList.value.length;
-                    const totalCost = bjdList.value.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+                    
+                    // 已付定金：统计排除“已出转单”之外的所有定金总和
+                    const paidDeposit = bjdList.value
+                        .filter(item => item.status !== '已出转单')
+                        .reduce((sum, item) => sum + (Number(item.deposit) || 0), 0);
+                    
+                    // 待付尾款：统计所有还在“工期中”或“运输中”的尾款总和（排除“已到家”和“已出转单”）
+                    const pendingBalance = bjdList.value
+                        .filter(item => ['已付定金', '制作中/排单', '已发货'].includes(item.status))
+                        .reduce((sum, item) => sum + (Number(item.balance) || 0), 0);
+
                     const waitingCount = bjdList.value.filter(item => ['已付定金', '制作中/排单', '已发货'].includes(item.status)).length;
                     const arrivedCount = bjdList.value.filter(item => item.status === '已到家').length;
-                    return { totalCount, totalCost, waitingCount, arrivedCount };
+                    
+                    return { totalCount, paidDeposit, pendingBalance, waitingCount, arrivedCount };
                 });
 
                 // 过滤后的列表
@@ -381,9 +428,7 @@
                         const fileName = `bjd_images/${Date.now()}_${Math.random().toString(36).substr(2, 5)}.${extension}`;
                         const result = await ossClient.put(fileName, file);
                         
-                        // 获取图片URL（如果是私有空间，需要使用 signatureUrl，公有直接用 url 即可，这里我们直接获取访问路径）
                         let url = result.url;
-                        // 处理部分网络环境下域名不带https的问题
                         if (url.startsWith('http://')) {
                             url = url.replace('http://', 'https://');
                         }
@@ -415,20 +460,18 @@
                     }
 
                     if (form.value.id) {
-                        // 编辑模式
                         const index = bjdList.value.findIndex(item => item.id === form.value.id);
                         if (index !== -1) {
                             bjdList.value[index] = { ...form.value };
                         }
                     } else {
-                        // 新建模式
                         form.value.id = Date.now().toString();
                         bjdList.value.push({ ...form.value });
                     }
 
                     dialogVisible.value = false;
                     await saveToOSS();
-                    ElMessage.success('保存成功并同步至OSS');
+                    ElMessage.success('保存成功并已上传云端');
                 };
 
                 // 删除物品
@@ -448,10 +491,10 @@
                 const getStatusClass = (status) => {
                     switch (status) {
                         case '已到家': return 'bg-green-100 text-green-700';
-                        case '制作中/排单': return 'bg-yellow-100 text-yellow-700';
+                        case '制作中/排单': return 'bg-amber-100 text-amber-700 border border-amber-200';
                         case '已发货': return 'bg-blue-100 text-blue-700';
                         case '已付定金': return 'bg-purple-100 text-purple-700';
-                        case '已出转单': return 'bg-gray-100 text-gray-500 line-through';
+                        case '已出转单': return 'bg-gray-100 text-gray-400 line-through';
                         default: return 'bg-gray-100 text-gray-700';
                     }
                 };
