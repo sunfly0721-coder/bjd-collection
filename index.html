@@ -1,323 +1,556 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BJD 收藏管理</title>
-  <link rel="stylesheet" href="css/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>BJD 收藏管理</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--rose:#c48f8f;--rose-dark:#b07373;--rose-light:#f0e2e2;--bg:#f6f2ed;--surface:#fff;--surface-hover:#faf8f6;--text:#2c2c2c;--text-secondary:#8a8a8a;--text-muted:#b5b0aa;--border:#e8e2da;--shadow:0 2px 12px rgba(0,0,0,.06);--shadow-lg:0 8px 32px rgba(0,0,0,.12);--radius:12px;--radius-sm:8px;--green:#7aab85;--green-bg:#eaf5ed;--amber:#c9a84c;--amber-bg:#faf3dd;--red:#c97a6b;--red-bg:#f8e8e5;--max-width:1200px}
+html{font-size:16px}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+button{cursor:pointer;font:inherit;border:none;outline:none}
+input,select,textarea{font:inherit;outline:none}
+img{display:block;max-width:100%}
+.hidden{display:none!important}
+.config-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px;z-index:1000}
+.config-card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow-lg);padding:40px;width:100%;max-width:460px}
+.config-card h1{font-size:1.5rem;font-weight:700;color:var(--rose-dark);margin-bottom:4px;text-align:center}
+.config-card .subtitle{color:var(--text-secondary);font-size:.875rem;text-align:center;margin-bottom:28px}
+.config-form{display:flex;flex-direction:column;gap:14px}
+.config-form label{font-size:.8125rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px}
+.config-form input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.9375rem;transition:border-color .2s;background:var(--bg)}
+.config-form input:focus{border-color:var(--rose);background:var(--surface)}
+.config-form .field-hint{font-size:.75rem;color:var(--text-muted);margin-top:2px}
+.config-error{color:var(--red);font-size:.875rem;text-align:center;min-height:1.4em;word-break:break-all}
+.btn-primary{padding:12px 24px;background:var(--rose);color:#fff;border-radius:var(--radius-sm);font-size:1rem;font-weight:600;transition:background .2s}
+.btn-primary:hover{background:var(--rose-dark)}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed}
+.app{max-width:var(--max-width);margin:0 auto;padding:0 16px 80px}
+.header{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--border);margin-bottom:20px}
+.header h1{font-size:1.25rem;font-weight:700;color:var(--rose-dark)}
+.header-actions{display:flex;gap:8px;align-items:center}
+.btn-icon{width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--surface);border-radius:50%;box-shadow:var(--shadow);font-size:1.1rem;transition:background .2s}
+.btn-icon:hover{background:var(--surface-hover)}
+.stats-bar{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.stat-item{flex:1;min-width:80px;background:var(--surface);border-radius:var(--radius);padding:14px 16px;text-align:center;box-shadow:var(--shadow);font-size:.8125rem;color:var(--text-secondary);line-height:1.3}
+.stat-num{display:block;font-size:1.5rem;font-weight:700;color:var(--text);margin-bottom:2px}
+.stat-total .stat-num{color:var(--text)}
+.stat-owned .stat-num{color:var(--green)}
+.stat-preorder .stat-num{color:var(--amber)}
+.stat-sold .stat-num{color:var(--red)}
+.category-tabs{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.category-tab{flex-shrink:0;padding:8px 20px;border-radius:20px;background:var(--surface);color:var(--text-secondary);font-size:.875rem;font-weight:500;border:1.5px solid var(--border);transition:all .2s}
+.category-tab:hover{background:var(--rose-light);color:var(--rose-dark);border-color:var(--rose-light)}
+.category-tab.active{background:var(--rose);color:#fff;border-color:var(--rose)}
+.filters-bar{display:flex;gap:10px;margin-bottom:20px;align-items:center;flex-wrap:wrap}
+.filters-bar select,.filters-bar input[type=text]{padding:9px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);font-size:.875rem;color:var(--text);transition:border-color .2s}
+.filters-bar select:focus,.filters-bar input[type=text]:focus{border-color:var(--rose)}
+.filters-bar select{min-width:110px}
+.filters-bar input[type=text]{flex:1;min-width:140px}
+.add-btn-row{margin-bottom:20px}
+.btn-add{display:inline-flex;align-items:center;gap:6px;padding:10px 24px;background:var(--rose);color:#fff;border-radius:var(--radius-sm);font-size:.9375rem;font-weight:600;transition:background .2s}
+.btn-add:hover{background:var(--rose-dark)}
+.item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}
+@media(min-width:640px){.item-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}}
+@media(min-width:1024px){.item-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}}
+.item-card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.item-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.card-image{position:relative;aspect-ratio:1;background:var(--bg);overflow:hidden}
+.card-image img{width:100%;height:100%;object-fit:cover}
+.img-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:var(--text-muted);background:var(--bg)}
+.status-badge{position:absolute;top:8px;right:8px;padding:3px 10px;border-radius:12px;font-size:.75rem;font-weight:600;line-height:1.4}
+.status-owned{background:var(--green-bg);color:var(--green)}
+.status-preorder{background:var(--amber-bg);color:var(--amber)}
+.status-sold{background:var(--red-bg);color:var(--red)}
+.card-body{padding:12px 14px 14px}
+.card-name{font-size:.9375rem;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-seller{font-size:.8125rem;color:var(--text-secondary);margin-bottom:2px}
+.card-amount{font-size:.875rem;color:var(--rose-dark);font-weight:600}
+.empty-state{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-muted);font-size:1rem}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:900;padding:16px;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.detail-modal,.form-modal{background:var(--surface);border-radius:var(--radius);max-width:600px;width:100%;max-height:90vh;overflow-y:auto;animation:slideUp .25s;box-shadow:var(--shadow-lg)}
+.form-modal{max-width:560px}
+.form-modal h2{font-size:1.2rem;font-weight:700;padding:24px 28px 0;margin-bottom:20px}
+.detail-body{padding:28px}
+.detail-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:20px}
+.detail-header h2{font-size:1.25rem;font-weight:700;line-height:1.3}
+.detail-header .status-badge{position:static;flex-shrink:0}
+.detail-images{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:24px}
+.detail-images img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:var(--radius-sm)}
+.detail-info{display:flex;flex-direction:column;gap:10px}
+.info-row{display:flex;align-items:baseline;gap:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.info-row:last-child{border-bottom:none}
+.info-label{flex-shrink:0;width:80px;font-size:.8125rem;color:var(--text-secondary);font-weight:500}
+.info-value{font-size:.9375rem;color:var(--text)}
+.info-notes{flex-direction:column;gap:6px}
+.info-notes .info-value{line-height:1.7;white-space:pre-wrap}
+.detail-actions{display:flex;gap:10px;padding:16px 28px 28px}
+.detail-actions button{flex:1;padding:10px;border-radius:var(--radius-sm);font-weight:600;font-size:.9375rem;transition:background .2s}
+.btn-edit{background:var(--rose);color:#fff}
+.btn-edit:hover{background:var(--rose-dark)}
+.btn-delete{background:var(--red-bg);color:var(--red)}
+.btn-delete:hover{background:#f0d6d2}
+.btn-close-detail{background:var(--bg);color:var(--text-secondary)}
+.btn-close-detail:hover{background:var(--border)}
+.item-form{padding:0 28px 24px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:.8125rem;font-weight:600;color:var(--text-secondary)}
+.form-group input,.form-group select,.form-group textarea{padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.9375rem;transition:border-color .2s;background:var(--bg)}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--rose);background:var(--surface)}
+.form-group textarea{resize:vertical;min-height:72px}
+.image-upload-area{margin-bottom:14px;grid-column:1/-1}
+.image-upload-area>label{font-size:.8125rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:8px}
+.upload-btn-wrapper{position:relative;display:inline-block}
+.upload-btn-wrapper input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.upload-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--bg);border:1.5px dashed var(--border);border-radius:var(--radius-sm);font-size:.875rem;color:var(--text-secondary);transition:all .2s}
+.upload-btn:hover{border-color:var(--rose);color:var(--rose);background:var(--rose-light)}
+.form-images{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.form-image-item{position:relative;width:80px;height:80px;border-radius:var(--radius-sm);overflow:hidden;border:1.5px solid var(--border)}
+.form-image-item img{width:100%;height:100%;object-fit:cover}
+.form-image-remove{position:absolute;top:2px;right:2px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);color:#fff;border-radius:50%;font-size:.875rem;transition:background .2s}
+.form-image-remove:hover{background:rgba(0,0,0,.8)}
+.form-image-label{position:absolute;bottom:2px;left:2px;padding:1px 6px;background:var(--rose);color:#fff;font-size:.6875rem;border-radius:4px}
+.form-actions{display:flex;gap:10px;margin-top:8px}
+.form-actions button{flex:1;padding:11px;border-radius:var(--radius-sm);font-weight:600;font-size:.9375rem;transition:background .2s}
+.btn-save{background:var(--rose);color:#fff}
+.btn-save:hover{background:var(--rose-dark)}
+.btn-save:disabled{opacity:.6;cursor:not-allowed}
+.btn-cancel{background:var(--bg);color:var(--text-secondary)}
+.btn-cancel:hover{background:var(--border)}
+.toast-container{position:fixed;top:20px;right:20px;z-index:2000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{padding:12px 20px;border-radius:var(--radius-sm);font-size:.9375rem;font-weight:500;box-shadow:var(--shadow-lg);animation:toastIn .3s ease;transition:opacity .3s,transform .3s;pointer-events:auto;max-width:360px}
+@keyframes toastIn{from{opacity:0;transform:translateX(100%)}to{opacity:1;transform:translateX(0)}}
+.toast--success{background:var(--green);color:#fff}
+.toast--error{background:var(--red);color:#fff}
+.toast--info{background:var(--text);color:#fff}
+@media(max-width:640px){
+.app{padding:0 12px 80px}
+.stats-bar{gap:8px}
+.stat-item{padding:10px 8px;min-width:60px}
+.stat-num{font-size:1.25rem}
+.item-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+.card-body{padding:10px 12px 12px}
+.card-name{font-size:.875rem}
+.detail-body{padding:20px}
+.detail-actions{padding:12px 20px 20px}
+.detail-images{grid-template-columns:repeat(2,1fr)}
+.form-modal h2{padding:20px 20px 0}
+.item-form{padding:0 20px 20px}
+.form-row{grid-template-columns:1fr}
+.form-group{margin-bottom:10px}
+.config-card{padding:28px 24px}
+}
+@media(max-width:400px){
+.item-grid{grid-template-columns:1fr 1fr;gap:8px}
+.stat-num{font-size:1.1rem}
+}
+</style>
 </head>
 <body>
 
-  <!-- 配置屏幕 -->
-  <div id="config-screen" class="config-screen">
-    <div class="config-card">
-      <h1>🐶 BJD 收藏管理</h1>
-      <p class="subtitle">连接到你的阿里云 OSS 以开始使用</p>
+<div id="config-screen" class="config-screen">
+<div class="config-card">
+<h1>🐶 BJD 收藏管理</h1>
+<p class="subtitle">连接到阿里云 OSS 以开始使用</p>
+<div class="config-form">
+<div>
+<label for="config-bucket">Bucket 名称</label>
+<input id="config-bucket" type="text" placeholder="例如：bjd-collection">
+<p class="field-hint">OSS 控制台创建的 bucket 名称</p>
+</div>
+<div>
+<label for="config-region">Region（地域）</label>
+<input id="config-region" type="text" placeholder="例如：oss-cn-hangzhou">
+<p class="field-hint">bucket 所在的地域</p>
+</div>
+<div>
+<label for="config-ak">AccessKey ID</label>
+<input id="config-ak" type="text" placeholder="RAM 子账号的 AccessKey ID">
+</div>
+<div>
+<label for="config-sk">AccessKey Secret</label>
+<input id="config-sk" type="password" placeholder="RAM 子账号的 AccessKey Secret">
+<p class="field-hint">建议使用 RAM 子账号</p>
+</div>
+<div id="config-error" class="config-error"></div>
+<button id="connect-btn" class="btn-primary">连接 OSS</button>
+</div>
+</div>
+</div>
 
-      <form id="config-form" class="config-form">
-        <div>
-          <label for="config-bucket">Bucket 名称</label>
-          <input id="config-bucket" name="bucket" type="text"
-                 placeholder="例如：bjd-collection" required>
-          <p class="field-hint">OSS 控制台创建的 bucket 名称</p>
-        </div>
+<div id="app-screen" class="app hidden">
+<header class="header">
+<h1>🐶 BJD 收藏</h1>
+<div class="header-actions">
+<button id="config-btn" class="btn-icon" title="修改 OSS 配置">⚙️</button>
+</div>
+</header>
+<div id="stats-bar" class="stats-bar"></div>
+<nav class="category-tabs">
+<button class="category-tab active" data-cat="all">全部</button>
+<button class="category-tab" data-cat="娃衣">娃衣</button>
+<button class="category-tab" data-cat="娃头">娃头</button>
+<button class="category-tab" data-cat="体子">体子</button>
+<button class="category-tab" data-cat="娃鞋">娃鞋</button>
+</nav>
+<div class="filters-bar">
+<select id="status-filter">
+<option value="all">全部状态</option>
+<option value="已入手">已入手</option>
+<option value="预购中">预购中</option>
+<option value="已出售">已出售</option>
+</select>
+<input type="text" id="search-input" placeholder="🔍 搜索名称或商家…">
+</div>
+<div class="add-btn-row"><button id="add-btn" class="btn-add">+ 添加藏品</button></div>
+<div id="item-grid" class="item-grid"></div>
+</div>
 
-        <div>
-          <label for="config-region">Region（地域）</label>
-          <input id="config-region" name="region" type="text"
-                 placeholder="例如：oss-cn-hangzhou" required>
-          <p class="field-hint">bucket 所在的地域，如 oss-cn-hangzhou / oss-cn-shanghai</p>
-        </div>
+<div id="form-overlay" class="overlay hidden">
+<div class="form-modal">
+<h2 id="form-title">添加藏品</h2>
+<form id="item-form" class="item-form">
+<div class="form-group">
+<label>藏品名称 *</label>
+<input id="f-name" type="text" placeholder="例如：DZ 四分女体">
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>分类</label>
+<select id="f-category">
+<option value="娃衣">娃衣</option>
+<option value="娃头">娃头</option>
+<option value="体子">体子</option>
+<option value="娃鞋">娃鞋</option>
+</select>
+</div>
+<div class="form-group">
+<label>状态</label>
+<select id="f-status">
+<option value="已入手">已入手</option>
+<option value="预购中">预购中</option>
+<option value="已出售">已出售</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>商家名称</label>
+<input id="f-seller" type="text" placeholder="商家或工作室名称">
+</div>
+<div class="form-group">
+<label>尺寸</label>
+<input id="f-size" type="text" placeholder="四分 / 三分 / 六分">
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>购买日期</label>
+<input id="f-date" type="date">
+</div>
+<div class="form-group">
+<label>金额 (¥)</label>
+<input id="f-amount" type="number" step="0.01" placeholder="0.00">
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>补尾款时间</label>
+<input id="f-balance-date" type="date">
+</div>
+<div class="form-group">
+<label>尾款金额 (¥)</label>
+<input id="f-balance-amount" type="number" step="0.01" placeholder="0.00">
+</div>
+</div>
+<div class="image-upload-area">
+<label>图片</label>
+<div class="upload-btn-wrapper">
+<button type="button" class="upload-btn">📷 选择图片</button>
+<input id="image-input" type="file" multiple accept="image/*">
+</div>
+<div id="form-images" class="form-images"></div>
+<div id="new-image-previews" class="form-images"></div>
+</div>
+<div class="form-group full">
+<label>备注</label>
+<textarea id="f-notes" placeholder="其他信息…"></textarea>
+</div>
+<div class="form-actions">
+<button type="button" id="form-save" class="btn-save">保存</button>
+<button type="button" id="form-cancel" class="btn-cancel">取消</button>
+</div>
+</form>
+</div>
+</div>
 
-        <div>
-          <label for="config-ak">AccessKey ID</label>
-          <input id="config-ak" name="accessKeyId" type="text"
-                 placeholder="RAM 子账号的 AccessKey ID" required>
-        </div>
+<div id="detail-overlay" class="overlay hidden">
+<div class="detail-modal">
+<div id="detail-body" class="detail-body"></div>
+<div class="detail-actions">
+<button id="detail-edit" class="btn-edit">✏️ 编辑</button>
+<button id="detail-delete" class="btn-delete">🗑️ 删除</button>
+<button id="detail-close" class="btn-close-detail">关闭</button>
+</div>
+</div>
+</div>
 
-        <div>
-          <label for="config-sk">AccessKey Secret</label>
-          <input id="config-sk" name="accessKeySecret" type="password"
-                 placeholder="RAM 子账号的 AccessKey Secret" required>
-          <p class="field-hint">建议使用 RAM 子账号，权限仅限该 bucket</p>
-        </div>
+<div id="toast-container" class="toast-container"></div>
 
-        <div id="config-error" class="config-error"></div>
+<script>
+// ==================== 纯 JS SHA-1 & HMAC-SHA1 ====================
+function hmacSha1(key,msg){
+function sha1(m){
+function r(x,n){return(x<<n)|(x>>>(32-n))}
+var b=[],i,c,w=[],h=[0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476,0xC3D2E1F0],a,b_,c_,d,e,f,k,t,off;
+for(i=0;i<m.length;i++){c=m.charCodeAt(i);if(c<128)b.push(c);else if(c<2048)b.push(192|c>>6,128|(c&63));else b.push(224|c>>12,128|(c>>6&63),128|(c&63))}
+var bl=b.length;b.push(128);while(b.length%64!=56)b.push(0);var bits=bl*8;for(i=7;i>=0;i--)b.push(bits>>>(i*8)&255);
+for(var blk=0;blk<b.length/64;blk++){
+w.length=0;
+for(i=0;i<16;i++){off=blk*64+i*4;w.push((b[off]<<24)|(b[off+1]<<16)|(b[off+2]<<8)|b[off+3])}
+for(i=16;i<80;i++)w.push(r(w[i-3]^w[i-8]^w[i-14]^w[i-16],1));
+a=h[0];b_=h[1];c_=h[2];d=h[3];e=h[4];
+for(i=0;i<80;i++){
+if(i<20){f=(b_&c_)|(~b_&d);k=0x5A827999}else if(i<40){f=b_^c_^d;k=0x6ED9EBA1}else if(i<60){f=(b_&c_)|(b_&d)|(c_&d);k=0x8F1BBCDC}else{f=b_^c_^d;k=0xCA62C1D6}
+t=(r(a,5)+f+e+k+w[i])|0;e=d;d=c_;c_=r(b_,30);b_=a;a=t}
+h[0]=(h[0]+a)|0;h[1]=(h[1]+b_)|0;h[2]=(h[2]+c_)|0;h[3]=(h[3]+d)|0;h[4]=(h[4]+e)|0}
+var o='';for(i=0;i<5;i++){o+=String.fromCharCode((h[i]>>>24)&255);o+=String.fromCharCode((h[i]>>>16)&255);o+=String.fromCharCode((h[i]>>>8)&255);o+=String.fromCharCode(h[i]&255)}return o}
+var k=key;if(k.length>64)k=sha1(k);while(k.length<64)k+='\x00';var ip='',op='';
+for(var i=0;i<64;i++){ip+=String.fromCharCode(k.charCodeAt(i)^0x36);op+=String.fromCharCode(k.charCodeAt(i)^0x5c)}
+return btoa(sha1(op+sha1(ip+msg)))}
 
-        <button type="button" id="connect-btn" class="btn-primary" onclick="App._onConnectClick()">连接 OSS</button>
-      </form>
-    </div>
-  </div>
+// ==================== OSS 直调客户端 ====================
+var OSSClient={
+_baseURL:function(){return'https://'+this.bucket+'.'+this.region+'.aliyuncs.com'},
+_request:async function(verb,key,body,ct){
+var url=this._baseURL()+'/'+key,date=new Date().toUTCString();
+var headers={'Date':date,'Content-Type':ct||''};
+var str=verb+'\n\n'+(ct||'')+'\n'+date+'\n/'+this.bucket+'/'+key;
+if(!this.secret)return null;
+headers['Authorization']='OSS '+this.key+':'+hmacSha1(this.secret,str);
+try{var r=await fetch(url,{method:verb,headers:headers,body:body||null});return r}catch(e){throw e}
+},
+_rawRequest:async function(verb,url,headers,body){
+try{return await fetch(url,{method:verb,headers:headers,body:body||null})}catch(e){throw e}
+},
+sign:function(verb,key,date,ct){return hmacSha1(this.secret,verb+'\n\n'+(ct||'')+'\n'+date+'\n/'+this.bucket+'/'+key)},
+setConfig:function(c){this.bucket=c.bucket;this.region=c.region;this.key=c.accessKeyId;this.secret=c.accessKeySecret},
+test:async function(){
+var url=this._baseURL()+'/_bjd_test_.tmp',date=new Date().toUTCString();
+var sig=this.sign('PUT','_bjd_test_.tmp',date,'text/plain');
+var r=await fetch(url,{method:'PUT',headers:{'Date':date,'Content-Type':'text/plain','Authorization':'OSS '+this.key+':'+sig},body:'ok'});
+if(!r.ok)throw new Error(await r.text());
+var d=date,s=this.sign('DELETE','_bjd_test_.tmp',d,'text/plain');
+var r2=await fetch(url,{method:'DELETE',headers:{'Date':d,'Content-Type':'text/plain','Authorization':'OSS '+this.key+':'+s}});
+},
+getJSON:async function(key){
+var r=await this._request('GET',key);if(r.status==404)return null;
+var t=await r.text();return t?JSON.parse(t):null},
+putJSON:async function(key,data){
+var body=JSON.stringify(data);await this._request('PUT',key,body,'application/json; charset=utf-8')},
+uploadImage:async function(itemId,file){
+var ext=file.name.split('.').pop()||'jpg',key='images/'+itemId+'/'+Date.now()+'_'+Math.random().toString(36).slice(2,6)+'.'+ext;
+await this._request('PUT',key,file,file.type||'image/jpeg');return key},
+deleteObj:async function(key){try{await this._request('DELETE',key)}catch(e){if(e.status!=404)throw e}},
+listObjects:async function(prefix){
+var base=this._baseURL(),date=new Date().toUTCString();
+var resource='/'+this.bucket+'/?prefix='+encodeURIComponent(prefix);
+var sig=hmacSha1(this.secret,'GET\n\n\n'+date+'\n'+resource);
+var r=await fetch(base+'/?prefix='+encodeURIComponent(prefix),{headers:{'Date':date,'Authorization':'OSS '+this.key+':'+sig}});
+if(!r.ok)return[];var xml=await r.text(),keys=[],re=/<Key>([^<]+)<\/Key>/g,m;
+while((m=re.exec(xml))!==null)keys.push(m[1]);return keys},
+deleteMulti:async function(keys){
+if(!keys.length)return;var base=this._baseURL(),date=new Date().toUTCString();
+var body='<?xml version="1.0"?><Delete><Quiet>true</Quiet>'+keys.map(function(k){return'<Object><Key>'+k+'</Key></Object>'}).join('')+'</Delete>';
+var resource='/'+this.bucket+'/?delete';
+var sig=hmacSha1(this.secret,'POST\n\napplication/xml\n'+date+'\n'+resource);
+await fetch(base+'/?delete',{method:'POST',headers:{'Date':date,'Content-Type':'application/xml','Authorization':'OSS '+this.key+':'+sig},body:body})},
+imgUrl:function(key){if(!key)return'';if(key.indexOf('http')===0)return key;return this._baseURL()+'/'+key},
+thumbUrl:function(key,s){return this.imgUrl(key)+(s?'?x-oss-process=image/resize,m_fixed,w_'+s+',h_'+s:'')}
+};
 
-  <!-- 主应用 -->
-  <div id="app" class="app hidden">
-    <header class="header">
-      <h1>🐶 BJD 收藏</h1>
-      <div class="header-actions">
-        <button id="config-btn" class="btn-icon" title="修改 OSS 配置">⚙️</button>
-      </div>
-    </header>
-    <div id="stats-bar" class="stats-bar"></div>
-    <nav class="category-tabs">
-      <button class="category-tab active" data-category="all">全部</button>
-      <button class="category-tab" data-category="娃衣">娃衣</button>
-      <button class="category-tab" data-category="娃头">娃头</button>
-      <button class="category-tab" data-category="体子">体子</button>
-      <button class="category-tab" data-category="娃鞋">娃鞋</button>
-    </nav>
-    <div class="filters-bar">
-      <select id="status-filter">
-        <option value="all">全部状态</option>
-        <option value="已入手">已入手</option>
-        <option value="预购中">预购中</option>
-        <option value="已出售">已出售</option>
-      </select>
-      <input type="text" id="search-input" placeholder="🔍 搜索名称或商家…">
-    </div>
-    <div class="add-btn-row">
-      <button id="add-btn" class="btn-add">+ 添加藏品</button>
-    </div>
-    <div id="item-grid" class="item-grid"></div>
-  </div>
+// ==================== 应用 ====================
+var App={items:[],cat:'all',st:'all',search:'',editId:null,removedKeys:[],
+init:function(){
+var c=localStorage.getItem('bjd_oss_config');
+if(c){try{var cfg=JSON.parse(c);if(cfg&&cfg.bucket&&cfg.region&&cfg.accessKeyId)return cfg}catch(e){}}
+return null
+},
+start:function(){
+var cfg=this.init();
+if(cfg){document.getElementById('config-screen').classList.add('hidden');document.getElementById('app-screen').classList.remove('hidden');this.load(cfg)}
+},
+connect:function(){
+var el=document.getElementById('config-error'),btn=document.getElementById('connect-btn');
+var bucket=document.getElementById('config-bucket').value.trim();
+var region=document.getElementById('config-region').value.trim();
+var ak=document.getElementById('config-ak').value.trim();
+var sk=document.getElementById('config-sk').value.trim();
+if(!bucket||!region||!ak||!sk){el.textContent='请填写所有字段';return}
+btn.disabled=true;btn.textContent='⏳ 连接中…';el.textContent='⏳ 正在测试 OSS 连接…';
+OSSClient.setConfig({bucket:bucket,region:region,accessKeyId:ak,accessKeySecret:sk});
+OSSClient.test().then(function(){
+el.textContent='✅ 连接成功，正在进入…';
+localStorage.setItem('bjd_oss_config',JSON.stringify({bucket:bucket,region:region,accessKeyId:ak,accessKeySecret:sk}));
+btn.disabled=false;btn.textContent='连接 OSS';
+document.getElementById('config-screen').classList.add('hidden');document.getElementById('app-screen').classList.remove('hidden');
+App.load({bucket:bucket,region:region,accessKeyId:ak,accessKeySecret:sk});
+}).catch(function(e){
+btn.disabled=false;btn.textContent='连接 OSS';
+var msg='连接失败',s=(e.message||'').toLowerCase();
+if(s.indexOf('403')>=0||s.indexOf('denied')>=0||s.indexOf('access')>=0)msg+='：权限不足。请在 RAM 控制台确认已授予 AliyunOSSFullAccess，且 AccessKey 正确';
+else if(s.indexOf('404')>=0||s.indexOf('nosuchbucket')>=0)msg+='：Bucket 不存在，请检查名称和 Region';
+else if(s.indexOf('invalid')>=0)msg+='：AccessKey 无效';
+else if(s.indexOf('signature')>=0||s.indexOf('405')>=0)msg+='：签名错误，请检查 AccessKey 是否正确';
+else if(s.indexOf('fetch')>=0||s.indexOf('network')>=0||e instanceof TypeError)msg+='：网络请求失败，请检查 CORS 配置或网络连接';
+else{msg+='：'+e.message;var b=e.body;if(b)msg+=' (服务器返回：'+b.substring(0,200)+')'}
+el.textContent=msg;
+});
+},
+load:async function(cfg){
+OSSClient.setConfig(cfg);
+try{this.items=await OSSClient.getJSON('data/items.json')||[]}catch(e){this.items=[]}
+this.render();
+},
+// ========== 渲染 ==========
+render:function(){
+this.renderStats();this.renderGrid();
+},
+renderStats:function(){
+var t=this.items.length,a=this.items.filter(function(i){return i.s=='已入手'}).length,b=this.items.filter(function(i){return i.s=='预购中'}).length,c=this.items.filter(function(i){return i.s=='已出售'}).length;
+document.getElementById('stats-bar').innerHTML='<div class="stat-item stat-total"><span class="stat-num">'+t+'</span> 全部</div><div class="stat-item stat-owned"><span class="stat-num">'+a+'</span> 已入手</div><div class="stat-item stat-preorder"><span class="stat-num">'+b+'</span> 预购中</div><div class="stat-item stat-sold"><span class="stat-num">'+c+'</span> 已出售</div>';
+},
+renderGrid:function(){
+var items=this._filter();var g=document.getElementById('item-grid');if(!g)return;
+if(!items.length){g.innerHTML='<div class="empty-state">'+(this.cat!='all'||this.st!='all'||this.search?'没有匹配的藏品 🐶':'还没有藏品，点击「+ 添加」开始记录吧 ✨')+'</div>';return}
+g.innerHTML=items.map(function(i){return'<div class="item-card" data-id="'+i.id+'" onclick="App.showDetail(\''+i.id+'\')"><div class="card-image">'+(i.images&&i.images[0]?'<img src="'+OSSClient.thumbUrl(i.images[0],300)+'" alt="'+esc(i.name)+'" loading="lazy" onerror="this.outerHTML=\'<div class=\\\\\\'img-placeholder\\\\\\'>📷</div>\'">':'<div class="img-placeholder">📷</div>')+'<span class="status-badge status-'+cls(i.s)+'">'+esc(i.s||'已入手')+'</span></div><div class="card-body"><h3 class="card-name">'+esc(i.name)+'</h3>'+(i.seller?'<p class="card-seller">'+esc(i.seller)+'</p>':'')+(i.amount?'<p class="card-amount">¥'+fmt(i.amount)+'</p>':'')+'</div></div>'}).join('');
+},
+_filter:function(){
+var me=this;
+return this.items.filter(function(i){if(me.cat!='all'&&i.cat!=me.cat)return false;if(me.st!='all'&&i.s!=me.st)return false;if(me.search){var q=me.search.toLowerCase();if((i.name||'').toLowerCase().indexOf(q)<0&&(i.seller||'').toLowerCase().indexOf(q)<0)return false}return true}).sort(function(a,b){return(b.createAt||0)-(a.createAt||0)});
+},
+// ========== 详情 ==========
+showDetail:function(id){
+var item=this.items.find(function(i){return i.id==id});if(!item)return;
+var el=document.getElementById('detail-body');
+var imgs=(item.images&&item.images.length)?item.images.map(function(k){return'<img src="'+OSSClient.imgUrl(k)+'" alt="'+esc(item.name)+'" loading="lazy" onerror="this.outerHTML=\'<div class=\\\\\\'img-placeholder\\\\\\' style=\\\\\\'width:100%;aspect-ratio:1\\\\\\'>📷</div>\'">'}).join(''):'<div class="img-placeholder" style="width:100%;aspect-ratio:1">📷</div>';
+el.innerHTML='<div class="detail-header"><h2>'+esc(item.name)+'</h2><span class="status-badge status-'+cls(item.s)+'">'+esc(item.s)+'</span></div><div class="detail-images">'+imgs+'</div><div class="detail-info">'+(item.cat?'<div class="info-row"><span class="info-label">分类</span><span class="info-value">'+esc(item.cat)+'</span></div>':'')+(item.seller?'<div class="info-row"><span class="info-label">商家</span><span class="info-value">'+esc(item.seller)+'</span></div>':'')+(item.size?'<div class="info-row"><span class="info-label">尺寸</span><span class="info-value">'+esc(item.size)+'</span></div>':'')+(item.pDate?'<div class="info-row"><span class="info-label">购买日期</span><span class="info-value">'+item.pDate+'</span></div>':'')+(item.amount?'<div class="info-row"><span class="info-label">金额</span><span class="info-value">¥'+fmt(item.amount)+'</span></div>':'')+(item.bDate?'<div class="info-row"><span class="info-label">补尾款时间</span><span class="info-value">'+item.bDate+'</span></div>':'')+(item.bAmount?'<div class="info-row"><span class="info-label">尾款金额</span><span class="info-value">¥'+fmt(item.bAmount)+'</span></div>':'')+(item.notes?'<div class="info-row info-notes"><span class="info-label">备注</span><p class="info-value">'+esc(item.notes)+'</p></div>':'')+'</div>';
+document.getElementById('detail-overlay').dataset.id=item.id;document.getElementById('detail-overlay').classList.remove('hidden');
+},
+closeDetail:function(){document.getElementById('detail-overlay').classList.add('hidden')},
+// ========== 表单 ==========
+openForm:function(item){
+var isEdit=!!item;this.editId=isEdit?item.id:null;this.removedKeys=[];
+document.getElementById('form-title').textContent=isEdit?'编辑藏品':'添加藏品';
+document.getElementById('f-name').value=isEdit?item.name||'':'';
+document.getElementById('f-category').value=isEdit?item.cat||'娃衣':'娃衣';
+document.getElementById('f-status').value=isEdit?item.s||'已入手':'已入手';
+document.getElementById('f-seller').value=isEdit?item.seller||'':'';
+document.getElementById('f-size').value=isEdit?item.size||'':'';
+document.getElementById('f-date').value=isEdit?item.pDate||'':'';
+document.getElementById('f-amount').value=isEdit?item.amount||'':'';
+document.getElementById('f-balance-date').value=isEdit?item.bDate||'':'';
+document.getElementById('f-balance-amount').value=isEdit?item.bAmount||'':'';
+document.getElementById('f-notes').value=isEdit?item.notes||'':'';
+document.getElementById('image-input').value='';
+// 已有图片
+var c=document.getElementById('form-images');c.innerHTML='';
+if(isEdit&&item.images)item.images.forEach(function(k){
+c.innerHTML+='<div class="form-image-item" data-key="'+k+'"><img src="'+OSSClient.thumbUrl(k,100)+'" alt="图片"><button type="button" class="form-image-remove" onclick="App.removeImg(\''+k+'\')">×</button></div>'});
+document.getElementById('new-image-previews').innerHTML='';
+document.getElementById('form-overlay').classList.remove('hidden');
+},
+removeImg:function(key){this.removedKeys.push(key);var el=document.querySelector('.form-image-item[data-key="'+key+'"]');if(el)el.remove()},
+closeForm:function(){document.getElementById('form-overlay').classList.add('hidden');this.editId=null;this.removedKeys=[]},
+saveForm:async function(){
+var data={name:document.getElementById('f-name').value.trim(),cat:document.getElementById('f-category').value,seller:document.getElementById('f-seller').value.trim(),size:document.getElementById('f-size').value.trim(),pDate:document.getElementById('f-date').value,amount:parseFloat(document.getElementById('f-amount').value)||null,bDate:document.getElementById('f-balance-date').value,bAmount:parseFloat(document.getElementById('f-balance-amount').value)||null,s:document.getElementById('f-status').value,notes:document.getElementById('f-notes').value.trim()};
+if(!data.name){App.toast('请填写藏品名称','error');return}
+var btn=document.getElementById('form-save');btn.disabled=true;btn.textContent='⏳ 保存中…';
+try{
+var files=document.getElementById('image-input').files;
+if(this.editId){// 编辑
+var item=this.items.find(function(i){return i.id==App.editId});
+if(this.removedKeys.length)for(var i=0;i<this.removedKeys.length;i++)try{await OSSClient.deleteObj(this.removedKeys[i])}catch(e){}
+var newKeys=[];if(files.length)newKeys=await OSSClient.uploadImages(this.editId,files);
+var kept=(item.images||[]).filter(function(k){return App.removedKeys.indexOf(k)<0});
+Object.assign(item,data,{images:kept.concat(newKeys),updateAt:Date.now()});
+}else{
+var id='bjd_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+var imgKeys=files.length?await OSSClient.uploadImages(id,files):[];
+this.items.push({id:id,images:imgKeys,createAt:Date.now(),updateAt:Date.now(),...data});
+}
+await OSSClient.putJSON('data/items.json',this.items);
+this.closeForm();this.render();App.toast(this.editId?'已更新 ✅':'已添加 ✅','success');
+}catch(e){App.toast('保存失败：'+(e.message||'未知错误'),'error');console.error(e)}
+finally{btn.disabled=false;btn.textContent='保存'}
+},
+// ========== 删除 ==========
+deleteItem:async function(id){
+if(!confirm('确定要删除这件藏品吗？此操作不可撤销。'))return;
+try{
+var item=this.items.find(function(i){return i.id==id});if(!item)return;
+if(item.images&&item.images.length){
+var keys=await OSSClient.listObjects('images/'+id+'/');if(keys.length)await OSSClient.deleteMulti(keys)}
+this.items=this.items.filter(function(i){return i.id!=id});
+await OSSClient.putJSON('data/items.json',this.items);
+this.closeDetail();this.render();App.toast('已删除 🗑️','info');
+}catch(e){App.toast('删除失败：'+(e.message||'未知错误'),'error')}
+},
+// ========== 配置修改 ==========
+changeConfig:function(){
+if(confirm('修改配置将断开当前连接，确认？')){localStorage.removeItem('bjd_oss_config');this.items=[];document.getElementById('app-screen').classList.add('hidden');document.getElementById('config-screen').classList.remove('hidden')}
+},
+// ========== Toast ==========
+toast:function(msg,type,duration){
+type=type||'info';duration=duration||3000;
+var c=document.getElementById('toast-container');
+var el=document.createElement('div');el.className='toast toast--'+type;el.textContent=msg;c.appendChild(el);
+setTimeout(function(){el.style.opacity='0';el.style.transform='translateX(100%)';setTimeout(function(){el.remove()},300)},duration)}
+};
 
-  <!-- 表单弹窗 -->
-  <div id="form-overlay" class="overlay hidden">
-    <div class="form-modal">
-      <h2 id="form-title">添加藏品</h2>
-      <form id="item-form" class="item-form">
-        <div class="form-group">
-          <label for="item-name">藏品名称 *</label>
-          <input id="item-name" name="name" type="text" placeholder="例如：DZ 四分女体" required>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="item-category">分类</label>
-            <select id="item-category" name="category">
-              <option value="娃衣">娃衣</option>
-              <option value="娃头">娃头</option>
-              <option value="体子">体子</option>
-              <option value="娃鞋">娃鞋</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="item-status">状态</label>
-            <select id="item-status" name="status">
-              <option value="已入手">已入手</option>
-              <option value="预购中">预购中</option>
-              <option value="已出售">已出售</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="item-seller">商家名称</label>
-            <input id="item-seller" name="seller" type="text" placeholder="商家或工作室名称">
-          </div>
-          <div class="form-group">
-            <label for="item-size">尺寸</label>
-            <input id="item-size" name="size" type="text" placeholder="例如：四分 / 三分 / 六分">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="item-date">购买日期</label>
-            <input id="item-date" name="purchase-date" type="date">
-          </div>
-          <div class="form-group">
-            <label for="item-amount">金额 (¥)</label>
-            <input id="item-amount" name="amount" type="number" step="0.01" placeholder="0.00">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="item-balance-date">补尾款时间</label>
-            <input id="item-balance-date" name="balance-date" type="date">
-          </div>
-          <div class="form-group">
-            <label for="item-balance-amount">尾款金额 (¥)</label>
-            <input id="item-balance-amount" name="balance-amount" type="number" step="0.01" placeholder="0.00">
-          </div>
-        </div>
-        <div class="image-upload-area">
-          <label>图片</label>
-          <div class="upload-btn-wrapper">
-            <button type="button" class="upload-btn">📷 选择图片</button>
-            <input id="image-input" type="file" multiple accept="image/*">
-          </div>
-          <div id="form-images" class="form-images"></div>
-          <div id="new-image-previews" class="form-images"></div>
-        </div>
-        <div class="form-group full">
-          <label for="item-notes">备注</label>
-          <textarea id="item-notes" name="notes" placeholder="其他信息…"></textarea>
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="btn-save">保存</button>
-          <button type="button" id="form-cancel" class="btn-cancel">取消</button>
-        </div>
-      </form>
-    </div>
-  </div>
+function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function fmt(v){if(v==null)return'';return v.toLocaleString('zh-CN',{minimumFractionDigits:2})}
+function cls(s){var m={'已入手':'owned','预购中':'preorder','已出售':'sold'};return m[s]||'owned'}
 
-  <!-- 详情弹窗 -->
-  <div id="detail-overlay" class="overlay hidden">
-    <div class="detail-modal">
-      <div id="detail-body" class="detail-body"></div>
-      <div class="detail-actions">
-        <button id="detail-edit" class="btn-edit">✏️ 编辑</button>
-        <button id="detail-delete" class="btn-delete">🗑️ 删除</button>
-        <button id="detail-close" class="btn-close-detail">关闭</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast 容器 -->
-  <div id="toast-container" class="toast-container"></div>
-
-  <!-- 脚本 -->
-  <script src="js/aliyun-oss-sdk.min.js"></script>
-  <script src="js/config.js"></script>
-  <script src="js/oss-client.js"></script>
-  <script src="js/app.js"></script>
-
-  <!-- 自包含连接处理器：即使外部脚本全部失败也能工作 -->
-  <script>
-    (function() {
-      var btn = document.getElementById('connect-btn');
-      var errEl = document.getElementById('config-error');
-      var STORAGE_KEY = 'bjd_oss_config';
-
-      if (!btn) return;
-
-      // 纯 JS HMAC-SHA1 - 不依赖任何浏览器 API / 外部库
-      function hmacSha1(key, data) {
-        function sha1(msg) {
-          function r(x, n) { return (x << n) | (x >>> (32 - n)); }
-          var bytes = [], i, c;
-          for (i = 0; i < msg.length; i++) {
-            c = msg.charCodeAt(i);
-            if (c < 0x80) bytes.push(c);
-            else if (c < 0x800) bytes.push(0xc0 | (c >> 6), 0x80 | (c & 0x3f));
-            else bytes.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f));
-          }
-          var blen = bytes.length;
-          bytes.push(0x80);
-          while (bytes.length % 64 !== 56) bytes.push(0);
-          var bits = blen * 8;
-          for (i = 7; i >= 0; i--) bytes.push((bits >>> (i * 8)) & 0xff);
-          var h = [0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0];
-          var w = [], off, a, b, c_, d, e, f, k, temp;
-          for (var block = 0; block < bytes.length / 64; block++) {
-            w.length = 0;
-            for (i = 0; i < 16; i++) {
-              off = block * 64 + i * 4;
-              w.push((bytes[off] << 24) | (bytes[off+1] << 16) | (bytes[off+2] << 8) | bytes[off+3]);
-            }
-            for (i = 16; i < 80; i++) w.push(r(w[i-3] ^ w[i-8] ^ w[i-14] ^ w[i-16], 1));
-            a = h[0]; b = h[1]; c_ = h[2]; d = h[3]; e = h[4];
-            for (i = 0; i < 80; i++) {
-              if (i < 20)      { f = (b & c_) | (~b & d);   k = 0x5A827999; }
-              else if (i < 40) { f = b ^ c_ ^ d;             k = 0x6ED9EBA1; }
-              else if (i < 60) { f = (b & c_) | (b & d) | (c_ & d); k = 0x8F1BBCDC; }
-              else             { f = b ^ c_ ^ d;             k = 0xCA62C1D6; }
-              temp = (r(a, 5) + f + e + k + w[i]) | 0;
-              e = d; d = c_; c_ = r(b, 30); b = a; a = temp;
-            }
-            h[0] = (h[0] + a) | 0; h[1] = (h[1] + b) | 0; h[2] = (h[2] + c_) | 0;
-            h[3] = (h[3] + d) | 0; h[4] = (h[4] + e) | 0;
-          }
-          var out = '';
-          for (i = 0; i < 5; i++) {
-            out += String.fromCharCode((h[i] >>> 24) & 0xff);
-            out += String.fromCharCode((h[i] >>> 16) & 0xff);
-            out += String.fromCharCode((h[i] >>> 8) & 0xff);
-            out += String.fromCharCode(h[i] & 0xff);
-          }
-          return out;
-        }
-        var k = key;
-        if (k.length > 64) k = sha1(k);
-        while (k.length < 64) k += '\x00';
-        var ipad = '', opad = '';
-        for (var i = 0; i < 64; i++) {
-          ipad += String.fromCharCode(k.charCodeAt(i) ^ 0x36);
-          opad += String.fromCharCode(k.charCodeAt(i) ^ 0x5c);
-        }
-        return btoa(sha1(opad + sha1(ipad + data)));
-      }
-
-      // 连接按钮点击处理
-      btn.onclick = function() {
-        errEl.textContent = '⏳ 正在配置…';
-
-        var bucket = document.getElementById('config-bucket').value.trim();
-        var region = document.getElementById('config-region').value.trim();
-        var ak = document.getElementById('config-ak').value.trim();
-        var sk = document.getElementById('config-sk').value.trim();
-
-        if (!bucket || !region || !ak || !sk) {
-          errEl.textContent = '请填写所有字段';
-          return;
-        }
-
-        errEl.textContent = '⏳ 正在连接 OSS…';
-
-        // 使用原生 fetch + 签名直调 OSS
-        var baseURL = 'https://' + bucket + '.' + region + '.aliyuncs.com';
-        var testKey = '_test_bjd_conn_.tmp';
-        var date = new Date().toUTCString();
-        var stringToSign = 'PUT\n\ntext/plain\n' + date + '\n/' + bucket + '/' + testKey;
-        var sig = hmacSha1(sk, stringToSign);
-
-        fetch(baseURL + '/' + testKey, {
-          method: 'PUT',
-          headers: {
-            'Date': date,
-            'Content-Type': 'text/plain',
-            'Authorization': 'OSS ' + ak + ':' + sig
-          },
-          body: 'ok'
-        }).then(function(resp) {
-          if (!resp.ok) throw new Error('HTTP ' + resp.status);
-
-          // 测试成功，删除测试文件
-          var delDate = new Date().toUTCString();
-          var delStr = 'DELETE\n\ntext/plain\n' + delDate + '\n/' + bucket + '/' + testKey;
-          var delSig = hmacSha1(sk, delStr);
-          return fetch(baseURL + '/' + testKey, {
-            method: 'DELETE',
-            headers: {
-              'Date': delDate,
-              'Content-Type': 'text/plain',
-              'Authorization': 'OSS ' + ak + ':' + delSig
-            }
-          });
-        }).then(function() {
-          // 保存配置到 localStorage
-          var config = {
-            bucket: bucket,
-            region: region,
-            accessKeyId: ak,
-            accessKeySecret: sk
-          };
-          try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-          } catch(e) {}
-          errEl.textContent = '✅ 连接成功！';
-          // 刷新页面，让 App 正常加载
-          setTimeout(function() { location.reload(); }, 500);
-        }).catch(function(e) {
-          var msg = '连接失败';
-          var s = (e.message || '').toLowerCase();
-          if (s.indexOf('403') !== -1 || s.indexOf('denied') !== -1) msg += '：权限不足，请确认 RAM 子账号有 AliyunOSSFullAccess 权限';
-          else if (s.indexOf('404') !== -1) msg += '：Bucket 不存在，请检查名称和 Region';
-          else if (s.indexOf('invalid') !== -1) msg += '：AccessKey 无效';
-          else if (s.indexOf('fetch') !== -1 || s.indexOf('network') !== -1) msg += '：网络请求失败，请检查 CORS 配置或网络';
-          else msg += '：' + (e.message || '未知错误');
-          errEl.textContent = msg;
-        });
-      };
-    })();
-  </script>
+// ==================== 事件绑定 ====================
+document.addEventListener('DOMContentLoaded',function(){
+App.start();
+document.getElementById('connect-btn').onclick=function(){App.connect()};
+document.getElementById('add-btn').onclick=function(){App.openForm(null)};
+document.getElementById('form-save').onclick=function(){App.saveForm()};
+document.getElementById('form-cancel').onclick=function(){App.closeForm()};
+document.getElementById('detail-close').onclick=function(){App.closeDetail()};
+document.getElementById('detail-edit').onclick=function(){
+var id=document.getElementById('detail-overlay').dataset.id;var item=App.items.find(function(i){return i.id==id});if(item){App.closeDetail();App.openForm(item)}};
+document.getElementById('detail-delete').onclick=function(){
+var id=document.getElementById('detail-overlay').dataset.id;if(id)App.deleteItem(id)};
+document.getElementById('config-btn').onclick=function(){App.changeConfig()};
+document.getElementById('image-input').onchange=function(e){
+var c=document.getElementById('new-image-previews');c.innerHTML='';
+for(var i=0;i<e.target.files.length;i++){
+(function(file){
+var r=new FileReader();
+r.onload=function(ev){var d=document.createElement('div');d.className='form-image-item';d.innerHTML='<img src="'+ev.target.result+'" alt="新图片"><span class="form-image-label">新</span>';c.appendChild(d)};
+r.readAsDataURL(file)
+})(e.target.files[i])}};
+// 分类点击
+document.querySelector('.category-tabs').onclick=function(e){
+var tab=e.target.closest('.category-tab');if(!tab)return;
+document.querySelectorAll('.category-tab').forEach(function(t){t.classList.remove('active')});tab.classList.add('active');
+App.cat=tab.dataset.cat;App.renderGrid()};
+// 状态筛选
+document.getElementById('status-filter').onchange=function(){App.st=this.value;App.renderGrid()};
+// 搜索
+document.getElementById('search-input').oninput=function(){var me=this;clearTimeout(App._st);App._st=setTimeout(function(){App.search=me.value.trim();App.renderGrid()},300)};
+// 弹窗点击外部关闭
+document.getElementById('form-overlay').onclick=function(e){if(e.target==this)App.closeForm()};
+document.getElementById('detail-overlay').onclick=function(e){if(e.target==this)App.closeDetail()};
+});
+</script>
 </body>
 </html>
