@@ -132,6 +132,12 @@
                                 </div>
                             </div>
 
+                            <!-- 尾款支付时间（非必填，有数据时才展示） -->
+                            <p v-if="item.balancePayDate" class="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                                📅 <span>尾款时间: </span>
+                                <span class="text-blue-600 font-medium">{{ item.balancePayDate }}</span>
+                            </p>
+
                             <p v-if="item.remark" class="text-xs text-gray-400 mt-2 truncate" :title="item.remark">
                                 备注: {{ item.remark }}
                             </p>
@@ -149,7 +155,7 @@
 
         <!-- 新增/编辑弹窗 -->
         <el-dialog v-model="dialogVisible" :title="form.id ? '编辑物品' : '新增物品'" width="90%" class="max-w-md">
-            <el-form :model="form" label-width="80px">
+            <el-form :model="form" label-width="100px">
                 <el-form-item label="物品分类" required>
                     <el-select v-model="form.category" class="w-full">
                         <el-option v-for="item in categories" :key="item" :label="item" :value="item"></el-option>
@@ -164,12 +170,22 @@
                     </el-select>
                 </el-form-item>
                 
-                <!-- 价格拆分 -->
                 <el-form-item label="已付定金" required>
                     <el-input-number v-model="form.deposit" :min="0" class="w-full" controls-position="right" placeholder="¥ 0.00"></el-input-number>
                 </el-form-item>
                 <el-form-item label="待付尾款" required>
                     <el-input-number v-model="form.balance" :min="0" class="w-full" controls-position="right" placeholder="¥ 0.00"></el-input-number>
+                </el-form-item>
+
+                <!-- 新增尾款时间（非必填） -->
+                <el-form-item label="尾款支付时间">
+                    <el-date-picker
+                        v-model="form.balancePayDate"
+                        type="date"
+                        placeholder="选择日期（可选）"
+                        value-format="YYYY-MM-DD"
+                        class="w-full"
+                    ></el-date-picker>
                 </el-form-item>
 
                 <el-form-item label="出货状态" required>
@@ -263,8 +279,9 @@
                     category: '娃头',
                     name: '',
                     size: '1/4',
-                    deposit: 0,  // 定金
-                    balance: 0,  // 尾款
+                    deposit: 0,
+                    balance: 0,
+                    balancePayDate: '', // 默认空值
                     status: '已付定金',
                     imageUrl: '',
                     remark: ''
@@ -308,12 +325,15 @@
                             const jsonStr = decoder.decode(result.content);
                             const parsedData = JSON.parse(jsonStr || '[]');
                             
-                            // 数据兼容性处理：若之前有单独的 price，转换为 deposit
+                            // 数据兼容与迁移
                             bjdList.value = parsedData.map(item => {
                                 if (item.price !== undefined && item.deposit === undefined) {
                                     item.deposit = item.price;
                                     item.balance = 0;
                                     delete item.price;
+                                }
+                                if (item.balancePayDate === undefined) {
+                                    item.balancePayDate = '';
                                 }
                                 return item;
                             });
@@ -367,174 +387,3 @@
                         ossClient = tempClient;
                         isOssConfigured.value = true;
                         settingsVisible.value = false;
-                        ElMessage.success('OSS 配置验证成功！');
-                        
-                        await loadDataFromOSS();
-                    } catch (e) {
-                        ElMessage.error('验证失败，请核对密钥拼写、没有首尾空格，以及CORS设置。');
-                        console.error(e);
-                    }
-                };
-
-                // 统计计算
-                const stats = computed(() => {
-                    const totalCount = bjdList.value.length;
-                    
-                    // 已付定金：统计排除“已出转单”之外的所有定金总和
-                    const paidDeposit = bjdList.value
-                        .filter(item => item.status !== '已出转单')
-                        .reduce((sum, item) => sum + (Number(item.deposit) || 0), 0);
-                    
-                    // 待付尾款：统计所有还在“工期中”或“运输中”的尾款总和（排除“已到家”和“已出转单”）
-                    const pendingBalance = bjdList.value
-                        .filter(item => ['已付定金', '制作中/排单', '已发货'].includes(item.status))
-                        .reduce((sum, item) => sum + (Number(item.balance) || 0), 0);
-
-                    const waitingCount = bjdList.value.filter(item => ['已付定金', '制作中/排单', '已发货'].includes(item.status)).length;
-                    const arrivedCount = bjdList.value.filter(item => item.status === '已到家').length;
-                    
-                    return { totalCount, paidDeposit, pendingBalance, waitingCount, arrivedCount };
-                });
-
-                // 过滤后的列表
-                const filteredList = computed(() => {
-                    return bjdList.value.filter(item => {
-                        const matchKeyword = !filters.value.keyword || 
-                            item.name.toLowerCase().includes(filters.value.keyword.toLowerCase()) || 
-                            (item.remark && item.remark.toLowerCase().includes(filters.value.keyword.toLowerCase()));
-                        const matchCategory = !filters.value.category || item.category === filters.value.category;
-                        const matchSize = !filters.value.size || item.size === filters.value.size;
-                        const matchStatus = !filters.value.status || item.status === filters.value.status;
-                        return matchKeyword && matchCategory && matchSize && matchStatus;
-                    });
-                });
-
-                const resetFilters = () => {
-                    filters.value = { keyword: '', category: '', size: '', status: '' };
-                };
-
-                // 上传图片处理
-                const handleImageUpload = async (event) => {
-                    const file = event.target.files[0];
-                    if (!file) return;
-                    if (!ossClient) {
-                        ElMessage.warning('请先配置OSS再上传图片。');
-                        return;
-                    }
-
-                    uploadingImg.value = true;
-                    try {
-                        const extension = file.name.split('.').pop();
-                        const fileName = `bjd_images/${Date.now()}_${Math.random().toString(36).substr(2, 5)}.${extension}`;
-                        const result = await ossClient.put(fileName, file);
-                        
-                        let url = result.url;
-                        if (url.startsWith('http://')) {
-                            url = url.replace('http://', 'https://');
-                        }
-                        form.value.imageUrl = url;
-                        ElMessage.success('图片上传成功！');
-                    } catch (e) {
-                        ElMessage.error('图片上传失败：' + e.message);
-                        console.error(e);
-                    } finally {
-                        uploadingImg.value = false;
-                    }
-                };
-
-                // 表单保存
-                const openAddDialog = () => {
-                    form.value = { ...defaultForm, id: null };
-                    dialogVisible.value = true;
-                };
-
-                const editItem = (item) => {
-                    form.value = { ...item };
-                    dialogVisible.value = true;
-                };
-
-                const saveForm = async () => {
-                    if (!form.value.name) {
-                        ElMessage.warning('请输入物品名称！');
-                        return;
-                    }
-
-                    if (form.value.id) {
-                        const index = bjdList.value.findIndex(item => item.id === form.value.id);
-                        if (index !== -1) {
-                            bjdList.value[index] = { ...form.value };
-                        }
-                    } else {
-                        form.value.id = Date.now().toString();
-                        bjdList.value.push({ ...form.value });
-                    }
-
-                    dialogVisible.value = false;
-                    await saveToOSS();
-                    ElMessage.success('保存成功并已上传云端');
-                };
-
-                // 删除物品
-                const deleteItem = (id) => {
-                    ElMessageBox.confirm('确定要删除这件物品吗？此操作无法撤销。', '提示', {
-                        confirmButtonText: '确定',
-                        cancelButtonText: '取消',
-                        type: 'warning',
-                    }).then(async () => {
-                        bjdList.value = bjdList.value.filter(item => item.id !== id);
-                        await saveToOSS();
-                        ElMessage.success('删除成功！');
-                    }).catch(() => {});
-                };
-
-                // 状态颜色显示
-                const getStatusClass = (status) => {
-                    switch (status) {
-                        case '已到家': return 'bg-green-100 text-green-700';
-                        case '制作中/排单': return 'bg-amber-100 text-amber-700 border border-amber-200';
-                        case '已发货': return 'bg-blue-100 text-blue-700';
-                        case '已付定金': return 'bg-purple-100 text-purple-700';
-                        case '已出转单': return 'bg-gray-100 text-gray-400 line-through';
-                        default: return 'bg-gray-100 text-gray-700';
-                    }
-                };
-
-                onMounted(() => {
-                    const configured = initOssClient();
-                    if (configured) {
-                        loadDataFromOSS();
-                    } else {
-                        settingsVisible.value = true;
-                    }
-                });
-
-                return {
-                    categories,
-                    sizes,
-                    statuses,
-                    bjdList,
-                    loading,
-                    isOssConfigured,
-                    dialogVisible,
-                    settingsVisible,
-                    uploadingImg,
-                    filters,
-                    ossConfig,
-                    form,
-                    filteredList,
-                    stats,
-                    openSettings,
-                    saveSettings,
-                    openAddDialog,
-                    editItem,
-                    saveForm,
-                    deleteItem,
-                    handleImageUpload,
-                    resetFilters,
-                    getStatusClass
-                };
-            }
-        }).use(ElementPlus).mount('#app');
-    </script>
-</body>
-</html>
