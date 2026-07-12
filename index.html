@@ -85,7 +85,7 @@ img{display:block;max-width:100%}
 .info-row:last-child{border-bottom:none}
 .info-label{flex-shrink:0;width:80px;font-size:.8125rem;color:var(--text-secondary);font-weight:500}
 .info-value{font-size:.9375rem;color:var(--text)}
-.info-notes{flex-direction:column;gap:6px}
+.info-notes{flex-direction:column;gap:6px;border-bottom:none}
 .info-notes .info-value{line-height:1.7;white-space:pre-wrap}
 .detail-actions{display:flex;gap:10px;padding:16px 28px 28px}
 .detail-actions button{flex:1;padding:10px;border-radius:var(--radius-sm);font-weight:600;font-size:.9375rem;transition:background .2s}
@@ -178,7 +178,7 @@ img{display:block;max-width:100%}
 <p class="field-hint">建议使用 RAM 子账号</p>
 </div>
 <div id="config-error" class="config-error"></div>
-<button id="connect-btn" class="btn-primary">连接 OSS</button>
+<button id="connect-btn" class="btn-primary" onclick="window.doConnectOSS()">连接 OSS</button>
 </div>
 </div>
 </div>
@@ -187,7 +187,7 @@ img{display:block;max-width:100%}
 <header class="header">
 <h1>🐶 BJD 收藏</h1>
 <div class="header-actions">
-<button id="config-btn" class="btn-icon" title="修改 OSS 配置">⚙️</button>
+<button id="config-btn" class="btn-icon" title="修改 OSS 配置">&#9881;</button>
 </div>
 </header>
 <div id="stats-bar" class="stats-bar"></div>
@@ -205,7 +205,7 @@ img{display:block;max-width:100%}
 <option value="预购中">预购中</option>
 <option value="已出售">已出售</option>
 </select>
-<input type="text" id="search-input" placeholder="🔍 搜索名称或商家…">
+<input type="text" id="search-input" placeholder="搜索名称或商家...">
 </div>
 <div class="add-btn-row"><button id="add-btn" class="btn-add">+ 添加藏品</button></div>
 <div id="item-grid" class="item-grid"></div>
@@ -271,7 +271,7 @@ img{display:block;max-width:100%}
 <div class="image-upload-area">
 <label>图片</label>
 <div class="upload-btn-wrapper">
-<button type="button" class="upload-btn">📷 选择图片</button>
+<button type="button" class="upload-btn">选择图片</button>
 <input id="image-input" type="file" multiple accept="image/*">
 </div>
 <div id="form-images" class="form-images"></div>
@@ -279,7 +279,7 @@ img{display:block;max-width:100%}
 </div>
 <div class="form-group full">
 <label>备注</label>
-<textarea id="f-notes" placeholder="其他信息…"></textarea>
+<textarea id="f-notes" placeholder="其他信息..."></textarea>
 </div>
 <div class="form-actions">
 <button type="button" id="form-save" class="btn-save">保存</button>
@@ -293,8 +293,8 @@ img{display:block;max-width:100%}
 <div class="detail-modal">
 <div id="detail-body" class="detail-body"></div>
 <div class="detail-actions">
-<button id="detail-edit" class="btn-edit">✏️ 编辑</button>
-<button id="detail-delete" class="btn-delete">🗑️ 删除</button>
+<button id="detail-edit" class="btn-edit">编辑</button>
+<button id="detail-delete" class="btn-delete">删除</button>
 <button id="detail-close" class="btn-close-detail">关闭</button>
 </div>
 </div>
@@ -302,254 +302,563 @@ img{display:block;max-width:100%}
 
 <div id="toast-container" class="toast-container"></div>
 
+<!-- ============ 第一个独立脚本：仅连接功能 ============ -->
 <script>
-// ==================== 纯 JS SHA-1 & HMAC-SHA1 ====================
-function hmacSha1(key,msg){
-function sha1(m){
-function r(x,n){return(x<<n)|(x>>>(32-n))}
-var b=[],i,c,w=[],h=[0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476,0xC3D2E1F0],a,b_,c_,d,e,f,k,t,off;
-for(i=0;i<m.length;i++){c=m.charCodeAt(i);if(c<128)b.push(c);else if(c<2048)b.push(192|c>>6,128|(c&63));else b.push(224|c>>12,128|(c>>6&63),128|(c&63))}
-var bl=b.length;b.push(128);while(b.length%64!=56)b.push(0);var bits=bl*8;for(i=7;i>=0;i--)b.push(bits>>>(i*8)&255);
-for(var blk=0;blk<b.length/64;blk++){
-w.length=0;
-for(i=0;i<16;i++){off=blk*64+i*4;w.push((b[off]<<24)|(b[off+1]<<16)|(b[off+2]<<8)|b[off+3])}
-for(i=16;i<80;i++)w.push(r(w[i-3]^w[i-8]^w[i-14]^w[i-16],1));
-a=h[0];b_=h[1];c_=h[2];d=h[3];e=h[4];
-for(i=0;i<80;i++){
-if(i<20){f=(b_&c_)|(~b_&d);k=0x5A827999}else if(i<40){f=b_^c_^d;k=0x6ED9EBA1}else if(i<60){f=(b_&c_)|(b_&d)|(c_&d);k=0x8F1BBCDC}else{f=b_^c_^d;k=0xCA62C1D6}
-t=(r(a,5)+f+e+k+w[i])|0;e=d;d=c_;c_=r(b_,30);b_=a;a=t}
-h[0]=(h[0]+a)|0;h[1]=(h[1]+b_)|0;h[2]=(h[2]+c_)|0;h[3]=(h[3]+d)|0;h[4]=(h[4]+e)|0}
-var o='';for(i=0;i<5;i++){o+=String.fromCharCode((h[i]>>>24)&255);o+=String.fromCharCode((h[i]>>>16)&255);o+=String.fromCharCode((h[i]>>>8)&255);o+=String.fromCharCode(h[i]&255)}return o}
-var k=key;if(k.length>64)k=sha1(k);while(k.length<64)k+='\x00';var ip='',op='';
-for(var i=0;i<64;i++){ip+=String.fromCharCode(k.charCodeAt(i)^0x36);op+=String.fromCharCode(k.charCodeAt(i)^0x5c)}
-return btoa(sha1(op+sha1(ip+msg)))}
-
-// ==================== OSS 直调客户端 ====================
-var OSSClient={
-_baseURL:function(){return'https://'+this.bucket+'.'+this.region+'.aliyuncs.com'},
-_request:async function(verb,key,body,ct){
-var url=this._baseURL()+'/'+key,date=new Date().toUTCString();
-var headers={'Date':date,'Content-Type':ct||''};
-var str=verb+'\n\n'+(ct||'')+'\n'+date+'\n/'+this.bucket+'/'+key;
-if(!this.secret)return null;
-headers['Authorization']='OSS '+this.key+':'+hmacSha1(this.secret,str);
-try{var r=await fetch(url,{method:verb,headers:headers,body:body||null});return r}catch(e){throw e}
-},
-_rawRequest:async function(verb,url,headers,body){
-try{return await fetch(url,{method:verb,headers:headers,body:body||null})}catch(e){throw e}
-},
-sign:function(verb,key,date,ct){return hmacSha1(this.secret,verb+'\n\n'+(ct||'')+'\n'+date+'\n/'+this.bucket+'/'+key)},
-setConfig:function(c){this.bucket=c.bucket;this.region=c.region;this.key=c.accessKeyId;this.secret=c.accessKeySecret},
-test:async function(){
-var url=this._baseURL()+'/_bjd_test_.tmp',date=new Date().toUTCString();
-var sig=this.sign('PUT','_bjd_test_.tmp',date,'text/plain');
-var r=await fetch(url,{method:'PUT',headers:{'Date':date,'Content-Type':'text/plain','Authorization':'OSS '+this.key+':'+sig},body:'ok'});
-if(!r.ok)throw new Error(await r.text());
-var d=date,s=this.sign('DELETE','_bjd_test_.tmp',d,'text/plain');
-var r2=await fetch(url,{method:'DELETE',headers:{'Date':d,'Content-Type':'text/plain','Authorization':'OSS '+this.key+':'+s}});
-},
-getJSON:async function(key){
-var r=await this._request('GET',key);if(r.status==404)return null;
-var t=await r.text();return t?JSON.parse(t):null},
-putJSON:async function(key,data){
-var body=JSON.stringify(data);await this._request('PUT',key,body,'application/json; charset=utf-8')},
-uploadImage:async function(itemId,file){
-var ext=file.name.split('.').pop()||'jpg',key='images/'+itemId+'/'+Date.now()+'_'+Math.random().toString(36).slice(2,6)+'.'+ext;
-await this._request('PUT',key,file,file.type||'image/jpeg');return key},
-deleteObj:async function(key){try{await this._request('DELETE',key)}catch(e){if(e.status!=404)throw e}},
-listObjects:async function(prefix){
-var base=this._baseURL(),date=new Date().toUTCString();
-var resource='/'+this.bucket+'/?prefix='+encodeURIComponent(prefix);
-var sig=hmacSha1(this.secret,'GET\n\n\n'+date+'\n'+resource);
-var r=await fetch(base+'/?prefix='+encodeURIComponent(prefix),{headers:{'Date':date,'Authorization':'OSS '+this.key+':'+sig}});
-if(!r.ok)return[];var xml=await r.text(),keys=[],re=/<Key>([^<]+)<\/Key>/g,m;
-while((m=re.exec(xml))!==null)keys.push(m[1]);return keys},
-deleteMulti:async function(keys){
-if(!keys.length)return;var base=this._baseURL(),date=new Date().toUTCString();
-var body='<?xml version="1.0"?><Delete><Quiet>true</Quiet>'+keys.map(function(k){return'<Object><Key>'+k+'</Key></Object>'}).join('')+'</Delete>';
-var resource='/'+this.bucket+'/?delete';
-var sig=hmacSha1(this.secret,'POST\n\napplication/xml\n'+date+'\n'+resource);
-await fetch(base+'/?delete',{method:'POST',headers:{'Date':date,'Content-Type':'application/xml','Authorization':'OSS '+this.key+':'+sig},body:body})},
-imgUrl:function(key){if(!key)return'';if(key.indexOf('http')===0)return key;return this._baseURL()+'/'+key},
-thumbUrl:function(key,s){return this.imgUrl(key)+(s?'?x-oss-process=image/resize,m_fixed,w_'+s+',h_'+s:'')}
-};
-
-// ==================== 应用 ====================
-var App={items:[],cat:'all',st:'all',search:'',editId:null,removedKeys:[],
-init:function(){
-var c=localStorage.getItem('bjd_oss_config');
-if(c){try{var cfg=JSON.parse(c);if(cfg&&cfg.bucket&&cfg.region&&cfg.accessKeyId)return cfg}catch(e){}}
-return null
-},
-start:function(){
-var cfg=this.init();
-if(cfg){document.getElementById('config-screen').classList.add('hidden');document.getElementById('app-screen').classList.remove('hidden');this.load(cfg)}
-},
-connect:function(){
-var el=document.getElementById('config-error'),btn=document.getElementById('connect-btn');
-var bucket=document.getElementById('config-bucket').value.trim();
-var region=document.getElementById('config-region').value.trim();
-var ak=document.getElementById('config-ak').value.trim();
-var sk=document.getElementById('config-sk').value.trim();
-if(!bucket||!region||!ak||!sk){el.textContent='请填写所有字段';return}
-btn.disabled=true;btn.textContent='⏳ 连接中…';el.textContent='⏳ 正在测试 OSS 连接…';
-OSSClient.setConfig({bucket:bucket,region:region,accessKeyId:ak,accessKeySecret:sk});
-OSSClient.test().then(function(){
-el.textContent='✅ 连接成功，正在进入…';
-localStorage.setItem('bjd_oss_config',JSON.stringify({bucket:bucket,region:region,accessKeyId:ak,accessKeySecret:sk}));
-btn.disabled=false;btn.textContent='连接 OSS';
-document.getElementById('config-screen').classList.add('hidden');document.getElementById('app-screen').classList.remove('hidden');
-App.load({bucket:bucket,region:region,accessKeyId:ak,accessKeySecret:sk});
-}).catch(function(e){
-btn.disabled=false;btn.textContent='连接 OSS';
-var msg='连接失败',s=(e.message||'').toLowerCase();
-if(s.indexOf('403')>=0||s.indexOf('denied')>=0||s.indexOf('access')>=0)msg+='：权限不足。请在 RAM 控制台确认已授予 AliyunOSSFullAccess，且 AccessKey 正确';
-else if(s.indexOf('404')>=0||s.indexOf('nosuchbucket')>=0)msg+='：Bucket 不存在，请检查名称和 Region';
-else if(s.indexOf('invalid')>=0)msg+='：AccessKey 无效';
-else if(s.indexOf('signature')>=0||s.indexOf('405')>=0)msg+='：签名错误，请检查 AccessKey 是否正确';
-else if(s.indexOf('fetch')>=0||s.indexOf('network')>=0||e instanceof TypeError)msg+='：网络请求失败，请检查 CORS 配置或网络连接';
-else{msg+='：'+e.message;var b=e.body;if(b)msg+=' (服务器返回：'+b.substring(0,200)+')'}
-el.textContent=msg;
-});
-},
-load:async function(cfg){
-OSSClient.setConfig(cfg);
-try{this.items=await OSSClient.getJSON('data/items.json')||[]}catch(e){this.items=[]}
-this.render();
-},
-// ========== 渲染 ==========
-render:function(){
-this.renderStats();this.renderGrid();
-},
-renderStats:function(){
-var t=this.items.length,a=this.items.filter(function(i){return i.s=='已入手'}).length,b=this.items.filter(function(i){return i.s=='预购中'}).length,c=this.items.filter(function(i){return i.s=='已出售'}).length;
-document.getElementById('stats-bar').innerHTML='<div class="stat-item stat-total"><span class="stat-num">'+t+'</span> 全部</div><div class="stat-item stat-owned"><span class="stat-num">'+a+'</span> 已入手</div><div class="stat-item stat-preorder"><span class="stat-num">'+b+'</span> 预购中</div><div class="stat-item stat-sold"><span class="stat-num">'+c+'</span> 已出售</div>';
-},
-renderGrid:function(){
-var items=this._filter();var g=document.getElementById('item-grid');if(!g)return;
-if(!items.length){g.innerHTML='<div class="empty-state">'+(this.cat!='all'||this.st!='all'||this.search?'没有匹配的藏品 🐶':'还没有藏品，点击「+ 添加」开始记录吧 ✨')+'</div>';return}
-g.innerHTML=items.map(function(i){return'<div class="item-card" data-id="'+i.id+'" onclick="App.showDetail(\''+i.id+'\')"><div class="card-image">'+(i.images&&i.images[0]?'<img src="'+OSSClient.thumbUrl(i.images[0],300)+'" alt="'+esc(i.name)+'" loading="lazy" onerror="this.outerHTML=\'<div class=\\\\\\'img-placeholder\\\\\\'>📷</div>\'">':'<div class="img-placeholder">📷</div>')+'<span class="status-badge status-'+cls(i.s)+'">'+esc(i.s||'已入手')+'</span></div><div class="card-body"><h3 class="card-name">'+esc(i.name)+'</h3>'+(i.seller?'<p class="card-seller">'+esc(i.seller)+'</p>':'')+(i.amount?'<p class="card-amount">¥'+fmt(i.amount)+'</p>':'')+'</div></div>'}).join('');
-},
-_filter:function(){
-var me=this;
-return this.items.filter(function(i){if(me.cat!='all'&&i.cat!=me.cat)return false;if(me.st!='all'&&i.s!=me.st)return false;if(me.search){var q=me.search.toLowerCase();if((i.name||'').toLowerCase().indexOf(q)<0&&(i.seller||'').toLowerCase().indexOf(q)<0)return false}return true}).sort(function(a,b){return(b.createAt||0)-(a.createAt||0)});
-},
-// ========== 详情 ==========
-showDetail:function(id){
-var item=this.items.find(function(i){return i.id==id});if(!item)return;
-var el=document.getElementById('detail-body');
-var imgs=(item.images&&item.images.length)?item.images.map(function(k){return'<img src="'+OSSClient.imgUrl(k)+'" alt="'+esc(item.name)+'" loading="lazy" onerror="this.outerHTML=\'<div class=\\\\\\'img-placeholder\\\\\\' style=\\\\\\'width:100%;aspect-ratio:1\\\\\\'>📷</div>\'">'}).join(''):'<div class="img-placeholder" style="width:100%;aspect-ratio:1">📷</div>';
-el.innerHTML='<div class="detail-header"><h2>'+esc(item.name)+'</h2><span class="status-badge status-'+cls(item.s)+'">'+esc(item.s)+'</span></div><div class="detail-images">'+imgs+'</div><div class="detail-info">'+(item.cat?'<div class="info-row"><span class="info-label">分类</span><span class="info-value">'+esc(item.cat)+'</span></div>':'')+(item.seller?'<div class="info-row"><span class="info-label">商家</span><span class="info-value">'+esc(item.seller)+'</span></div>':'')+(item.size?'<div class="info-row"><span class="info-label">尺寸</span><span class="info-value">'+esc(item.size)+'</span></div>':'')+(item.pDate?'<div class="info-row"><span class="info-label">购买日期</span><span class="info-value">'+item.pDate+'</span></div>':'')+(item.amount?'<div class="info-row"><span class="info-label">金额</span><span class="info-value">¥'+fmt(item.amount)+'</span></div>':'')+(item.bDate?'<div class="info-row"><span class="info-label">补尾款时间</span><span class="info-value">'+item.bDate+'</span></div>':'')+(item.bAmount?'<div class="info-row"><span class="info-label">尾款金额</span><span class="info-value">¥'+fmt(item.bAmount)+'</span></div>':'')+(item.notes?'<div class="info-row info-notes"><span class="info-label">备注</span><p class="info-value">'+esc(item.notes)+'</p></div>':'')+'</div>';
-document.getElementById('detail-overlay').dataset.id=item.id;document.getElementById('detail-overlay').classList.remove('hidden');
-},
-closeDetail:function(){document.getElementById('detail-overlay').classList.add('hidden')},
-// ========== 表单 ==========
-openForm:function(item){
-var isEdit=!!item;this.editId=isEdit?item.id:null;this.removedKeys=[];
-document.getElementById('form-title').textContent=isEdit?'编辑藏品':'添加藏品';
-document.getElementById('f-name').value=isEdit?item.name||'':'';
-document.getElementById('f-category').value=isEdit?item.cat||'娃衣':'娃衣';
-document.getElementById('f-status').value=isEdit?item.s||'已入手':'已入手';
-document.getElementById('f-seller').value=isEdit?item.seller||'':'';
-document.getElementById('f-size').value=isEdit?item.size||'':'';
-document.getElementById('f-date').value=isEdit?item.pDate||'':'';
-document.getElementById('f-amount').value=isEdit?item.amount||'':'';
-document.getElementById('f-balance-date').value=isEdit?item.bDate||'':'';
-document.getElementById('f-balance-amount').value=isEdit?item.bAmount||'':'';
-document.getElementById('f-notes').value=isEdit?item.notes||'':'';
-document.getElementById('image-input').value='';
-// 已有图片
-var c=document.getElementById('form-images');c.innerHTML='';
-if(isEdit&&item.images)item.images.forEach(function(k){
-c.innerHTML+='<div class="form-image-item" data-key="'+k+'"><img src="'+OSSClient.thumbUrl(k,100)+'" alt="图片"><button type="button" class="form-image-remove" onclick="App.removeImg(\''+k+'\')">×</button></div>'});
-document.getElementById('new-image-previews').innerHTML='';
-document.getElementById('form-overlay').classList.remove('hidden');
-},
-removeImg:function(key){this.removedKeys.push(key);var el=document.querySelector('.form-image-item[data-key="'+key+'"]');if(el)el.remove()},
-closeForm:function(){document.getElementById('form-overlay').classList.add('hidden');this.editId=null;this.removedKeys=[]},
-saveForm:async function(){
-var data={name:document.getElementById('f-name').value.trim(),cat:document.getElementById('f-category').value,seller:document.getElementById('f-seller').value.trim(),size:document.getElementById('f-size').value.trim(),pDate:document.getElementById('f-date').value,amount:parseFloat(document.getElementById('f-amount').value)||null,bDate:document.getElementById('f-balance-date').value,bAmount:parseFloat(document.getElementById('f-balance-amount').value)||null,s:document.getElementById('f-status').value,notes:document.getElementById('f-notes').value.trim()};
-if(!data.name){App.toast('请填写藏品名称','error');return}
-var btn=document.getElementById('form-save');btn.disabled=true;btn.textContent='⏳ 保存中…';
-try{
-var files=document.getElementById('image-input').files;
-if(this.editId){// 编辑
-var item=this.items.find(function(i){return i.id==App.editId});
-if(this.removedKeys.length)for(var i=0;i<this.removedKeys.length;i++)try{await OSSClient.deleteObj(this.removedKeys[i])}catch(e){}
-var newKeys=[];if(files.length)newKeys=await OSSClient.uploadImages(this.editId,files);
-var kept=(item.images||[]).filter(function(k){return App.removedKeys.indexOf(k)<0});
-Object.assign(item,data,{images:kept.concat(newKeys),updateAt:Date.now()});
-}else{
-var id='bjd_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
-var imgKeys=files.length?await OSSClient.uploadImages(id,files):[];
-this.items.push({id:id,images:imgKeys,createAt:Date.now(),updateAt:Date.now(),...data});
+// 纯 JS HMAC-SHA1 实现（独立函数，不依赖任何其他代码）
+function hmacSha1(key, msg) {
+  function sha1(m) {
+    function r(x,n) { return (x << n) | (x >>> (32-n)); }
+    var b=[], i, c, w=[];
+    var h=[0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476,0xC3D2E1F0];
+    var a, b_, c_, d, e, f, k, temp, off;
+    for (i=0; i<m.length; i++) {
+      c = m.charCodeAt(i);
+      if (c < 128) b.push(c);
+      else if (c < 2048) b.push(192|(c>>6), 128|(c&63));
+      else b.push(224|(c>>12), 128|((c>>6)&63), 128|(c&63));
+    }
+    var bl = b.length;
+    b.push(128);
+    while (b.length % 64 !== 56) b.push(0);
+    var bits = bl * 8;
+    for (i=7; i>=0; i--) b.push((bits>>>(i*8))&255);
+    for (var blk=0; blk<b.length/64; blk++) {
+      w.length = 0;
+      for (i=0; i<16; i++) {
+        off = blk*64+i*4;
+        w.push((b[off]<<24)|(b[off+1]<<16)|(b[off+2]<<8)|b[off+3]);
+      }
+      for (i=16; i<80; i++) w.push(r(w[i-3]^w[i-8]^w[i-14]^w[i-16], 1));
+      a=h[0]; b_=h[1]; c_=h[2]; d=h[3]; e=h[4];
+      for (i=0; i<80; i++) {
+        if (i<20) { f=(b_&c_)|(~b_&d); k=0x5A827999; }
+        else if (i<40) { f=b_^c_^d; k=0x6ED9EBA1; }
+        else if (i<60) { f=(b_&c_)|(b_&d)|(c_&d); k=0x8F1BBCDC; }
+        else { f=b_^c_^d; k=0xCA62C1D6; }
+        temp = (r(a,5)+f+e+k+w[i])|0;
+        e=d; d=c_; c_=r(b_,30); b_=a; a=temp;
+      }
+      h[0]=(h[0]+a)|0; h[1]=(h[1]+b_)|0; h[2]=(h[2]+c_)|0;
+      h[3]=(h[3]+d)|0; h[4]=(h[4]+e)|0;
+    }
+    var o = '';
+    for (i=0; i<5; i++) {
+      o += String.fromCharCode((h[i]>>>24)&255);
+      o += String.fromCharCode((h[i]>>>16)&255);
+      o += String.fromCharCode((h[i]>>>8)&255);
+      o += String.fromCharCode(h[i]&255);
+    }
+    return o;
+  }
+  var k = key;
+  if (k.length > 64) k = sha1(k);
+  while (k.length < 64) k += '\x00';
+  var ip = '', op = '';
+  for (var i=0; i<64; i++) {
+    ip += String.fromCharCode(k.charCodeAt(i) ^ 0x36);
+    op += String.fromCharCode(k.charCodeAt(i) ^ 0x5c);
+  }
+  return btoa(sha1(op + sha1(ip + msg)));
 }
-await OSSClient.putJSON('data/items.json',this.items);
-this.closeForm();this.render();App.toast(this.editId?'已更新 ✅':'已添加 ✅','success');
-}catch(e){App.toast('保存失败：'+(e.message||'未知错误'),'error');console.error(e)}
-finally{btn.disabled=false;btn.textContent='保存'}
-},
-// ========== 删除 ==========
-deleteItem:async function(id){
-if(!confirm('确定要删除这件藏品吗？此操作不可撤销。'))return;
-try{
-var item=this.items.find(function(i){return i.id==id});if(!item)return;
-if(item.images&&item.images.length){
-var keys=await OSSClient.listObjects('images/'+id+'/');if(keys.length)await OSSClient.deleteMulti(keys)}
-this.items=this.items.filter(function(i){return i.id!=id});
-await OSSClient.putJSON('data/items.json',this.items);
-this.closeDetail();this.render();App.toast('已删除 🗑️','info');
-}catch(e){App.toast('删除失败：'+(e.message||'未知错误'),'error')}
-},
-// ========== 配置修改 ==========
-changeConfig:function(){
-if(confirm('修改配置将断开当前连接，确认？')){localStorage.removeItem('bjd_oss_config');this.items=[];document.getElementById('app-screen').classList.add('hidden');document.getElementById('config-screen').classList.remove('hidden')}
-},
-// ========== Toast ==========
-toast:function(msg,type,duration){
-type=type||'info';duration=duration||3000;
-var c=document.getElementById('toast-container');
-var el=document.createElement('div');el.className='toast toast--'+type;el.textContent=msg;c.appendChild(el);
-setTimeout(function(){el.style.opacity='0';el.style.transform='translateX(100%)';setTimeout(function(){el.remove()},300)},duration)}
+
+// 全局连接函数 - 由 HTML 中 onclick 直接调用
+window.doConnectOSS = function() {
+  var errEl = document.getElementById('config-error');
+  var btn = document.getElementById('connect-btn');
+  if (!errEl) { alert('页面加载异常，请刷新'); return; }
+
+  var bucket = document.getElementById('config-bucket').value.trim();
+  var region = document.getElementById('config-region').value.trim();
+  var ak = document.getElementById('config-ak').value.trim();
+  var sk = document.getElementById('config-sk').value.trim();
+
+  if (!bucket || !region || !ak || !sk) {
+    errEl.textContent = '请填写所有字段';
+    return;
+  }
+
+  errEl.textContent = '正在连接 OSS...';
+  btn.disabled = true;
+  btn.textContent = '连接中...';
+
+  var baseURL = 'https://' + bucket + '.' + region + '.aliyuncs.com';
+  var testKey = '_bjd_test_conn_.tmp';
+  var date = new Date().toUTCString();
+  var str = 'PUT\n\ntext/plain\n' + date + '\n/' + bucket + '/' + testKey;
+  var sig = hmacSha1(sk, str);
+
+  fetch(baseURL + '/' + testKey, {
+    method: 'PUT',
+    headers: { 'Date': date, 'Content-Type': 'text/plain', 'Authorization': 'OSS ' + ak + ':' + sig },
+    body: 'ok'
+  }).then(function(resp) {
+    if (!resp.ok) return resp.text().then(function(t) { throw new Error('HTTP ' + resp.status + ': ' + t.substring(0,200)); });
+    // 删除测试文件
+    var d2 = new Date().toUTCString();
+    var s2 = 'DELETE\n\ntext/plain\n' + d2 + '\n/' + bucket + '/' + testKey;
+    var sig2 = hmacSha1(sk, s2);
+    return fetch(baseURL + '/' + testKey, {
+      method: 'DELETE',
+      headers: { 'Date': d2, 'Content-Type': 'text/plain', 'Authorization': 'OSS ' + ak + ':' + sig2 }
+    });
+  }).then(function() {
+    errEl.textContent = '连接成功！正在进入...';
+    localStorage.setItem('bjd_oss_config', JSON.stringify({
+      bucket: bucket, region: region, accessKeyId: ak, accessKeySecret: sk
+    }));
+    setTimeout(function() { location.reload(); }, 300);
+  }).catch(function(e) {
+    btn.disabled = false;
+    btn.textContent = '连接 OSS';
+    var msg = '连接失败：';
+    var s = (e.message || e).toLowerCase();
+    if (s.indexOf('403')>=0 || s.indexOf('denied')>=0 || s.indexOf('access')>=0)
+      msg += '权限不足。请在 RAM 控制台确认已授予 AliyunOSSFullAccess 权限';
+    else if (s.indexOf('404')>=0 || s.indexOf('nosuchbucket')>=0)
+      msg += 'Bucket 名称或 Region 不正确';
+    else if (s.indexOf('invalidaccesskeyid')>=0)
+      msg += 'AccessKey ID 无效';
+    else if (s.indexOf('signature')>=0)
+      msg += '签名错误，请检查 AccessKey Secret';
+    else if (s.indexOf('fetch')>=0 || s.indexOf('network')>=0 || e instanceof TypeError)
+      msg += '网络请求失败，请检查 CORS 配置';
+    else
+      msg += (e.message || e || '未知错误');
+    errEl.textContent = msg;
+    console.error('连接失败:', e);
+  });
+};
+</script>
+
+<!-- ============ 第二个脚本：应用核心逻辑 ============ -->
+<script>
+// 定义工具函数
+function esc(s) { if (!s) return ''; var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+function fmt(v) { if (v==null) return ''; return v.toLocaleString('zh-CN', {minimumFractionDigits:2}); }
+function cls(s) { var m={'已入手':'owned','预购中':'preorder','已出售':'sold'}; return m[s]||'owned'; }
+
+// 存储引用
+var _bucket, _region, _ak, _sk, _baseURL;
+
+var App = {
+  items: [],
+  cat: 'all',
+  st: 'all',
+  search: '',
+  editId: null,
+  removedKeys: [],
+
+  init: function() {
+    var raw = localStorage.getItem('bjd_oss_config');
+    if (!raw) return null;
+    try {
+      var c = JSON.parse(raw);
+      if (c && c.bucket && c.region && c.accessKeyId) return c;
+    } catch(e) {}
+    return null;
+  },
+
+  start: function() {
+    var cfg = this.init();
+    if (cfg) {
+      document.getElementById('config-screen').classList.add('hidden');
+      document.getElementById('app-screen').classList.remove('hidden');
+      this.loadData(cfg);
+    }
+  },
+
+  loadData: async function(cfg) {
+    _bucket = cfg.bucket; _region = cfg.region;
+    _ak = cfg.accessKeyId; _sk = cfg.accessKeySecret;
+    _baseURL = 'https://' + _bucket + '.' + _region + '.aliyuncs.com';
+    return this._loadItems();
+  },
+
+  _base: function(key) { return _baseURL + '/' + key; },
+
+  _sign: function(verb, key, date) {
+    return hmacSha1(_sk, verb + '\n\n\n' + date + '\n/' + _bucket + '/' + key);
+  },
+
+  _fetch: async function(verb, key, body, ct) {
+    var date = new Date().toUTCString();
+    var sig = this._sign(verb, key, date);
+    var h = { 'Date': date, 'Authorization': 'OSS ' + _ak + ':' + sig };
+    if (ct) h['Content-Type'] = ct;
+    var r = await fetch(this._base(key), { method: verb, headers: h, body: body || null });
+    if (!r.ok && r.status !== 404) throw new Error('HTTP ' + r.status);
+    return r;
+  },
+
+  _fetchRaw: async function(verb, url, headers, body) {
+    var r = await fetch(url, { method: verb, headers: headers, body: body || null });
+    if (!r.ok && r.status !== 404) throw new Error('HTTP ' + r.status);
+    return r;
+  },
+
+  _loadItems: async function() {
+    try {
+      var r = await this._fetch('GET', 'data/items.json');
+      if (r.status === 404) { this.items = []; this.render(); return; }
+      var text = await r.text();
+      this.items = text ? JSON.parse(text) : [];
+    } catch(e) {
+      console.error('加载数据失败:', e);
+      this.items = [];
+    }
+    this.render();
+  },
+
+  _saveItems: async function() {
+    var body = JSON.stringify(this.items);
+    await this._fetch('PUT', 'data/items.json', body, 'application/json; charset=utf-8');
+  },
+
+  _listObjects: async function(prefix) {
+    var date = new Date().toUTCString();
+    var resource = '/' + _bucket + '/?prefix=' + encodeURIComponent(prefix);
+    var sig = hmacSha1(_sk, 'GET\n\n\n' + date + '\n' + resource);
+    var r = await fetch(_baseURL + '/?prefix=' + encodeURIComponent(prefix), {
+      headers: { 'Date': date, 'Authorization': 'OSS ' + _ak + ':' + sig }
+    });
+    if (!r.ok) return [];
+    var xml = await r.text();
+    var keys = [], re = /<Key>([^<]+)<\/Key>/g, m;
+    while ((m = re.exec(xml)) !== null) keys.push(m[1]);
+    return keys;
+  },
+
+  _deleteMulti: async function(keys) {
+    if (!keys.length) return;
+    var body = '<?xml version="1.0"?><Delete><Quiet>true</Quiet>';
+    for (var i=0; i<keys.length; i++) body += '<Object><Key>' + keys[i] + '</Key></Object>';
+    body += '</Delete>';
+    var date = new Date().toUTCString();
+    var sig = hmacSha1(_sk, 'POST\n\napplication/xml\n' + date + '\n/' + _bucket + '/?delete');
+    await fetch(_baseURL + '/?delete', {
+      method: 'POST',
+      headers: { 'Date': date, 'Content-Type': 'application/xml', 'Authorization': 'OSS ' + _ak + ':' + sig },
+      body: body
+    });
+  },
+
+  render: function() {
+    this._renderStats();
+    this._renderGrid();
+  },
+
+  _renderStats: function() {
+    var t = this.items.length;
+    var a = this.items.filter(function(i){return i.s=='已入手'}).length;
+    var b = this.items.filter(function(i){return i.s=='预购中'}).length;
+    var c = this.items.filter(function(i){return i.s=='已出售'}).length;
+    document.getElementById('stats-bar').innerHTML =
+      '<div class="stat-item stat-total"><span class="stat-num">'+t+'</span> 全部</div>' +
+      '<div class="stat-item stat-owned"><span class="stat-num">'+a+'</span> 已入手</div>' +
+      '<div class="stat-item stat-preorder"><span class="stat-num">'+b+'</span> 预购中</div>' +
+      '<div class="stat-item stat-sold"><span class="stat-num">'+c+'</span> 已出售</div>';
+  },
+
+  _renderGrid: function() {
+    var items = this._filter();
+    var g = document.getElementById('item-grid');
+    if (!g) return;
+    if (!items.length) {
+      g.innerHTML = '<div class="empty-state">' +
+        (this.cat!='all'||this.st!='all'||this.search ? '没有匹配的藏品' : '还没有藏品，点击「+ 添加」开始记录吧') +
+        '</div>';
+      return;
+    }
+    var html = '';
+    for (var i=0; i<items.length; i++) {
+      var item = items[i];
+      var img = item.images && item.images[0];
+      html += '<div class="item-card" data-id="'+item.id+'" onclick="App.showDetail(\''+item.id+'\')">' +
+        '<div class="card-image">' +
+        (img ? '<img src="'+_baseURL+'/'+img+'?x-oss-process=image/resize,m_fixed,w_300,h_300" alt="'+esc(item.name)+'" loading="lazy">' : '<div class="img-placeholder">&#x1F4F7;</div>') +
+        '<span class="status-badge status-'+cls(item.s)+'">'+esc(item.s||'已入手')+'</span>' +
+        '</div><div class="card-body">' +
+        '<h3 class="card-name">'+esc(item.name)+'</h3>' +
+        (item.seller ? '<p class="card-seller">'+esc(item.seller)+'</p>' : '') +
+        (item.amount ? '<p class="card-amount">¥'+fmt(item.amount)+'</p>' : '') +
+        '</div></div>';
+    }
+    g.innerHTML = html;
+  },
+
+  _filter: function() {
+    var me = this;
+    return this.items.filter(function(i) {
+      if (me.cat !== 'all' && i.cat !== me.cat) return false;
+      if (me.st !== 'all' && i.s !== me.st) return false;
+      if (me.search) {
+        var q = me.search.toLowerCase();
+        if ((i.name||'').toLowerCase().indexOf(q) < 0 && (i.seller||'').toLowerCase().indexOf(q) < 0) return false;
+      }
+      return true;
+    }).sort(function(a,b){return (b.createAt||0) - (a.createAt||0);});
+  },
+
+  showDetail: function(id) {
+    var item = this.items.find(function(i){return i.id==id;});
+    if (!item) return;
+    var el = document.getElementById('detail-body');
+    var imgs = (item.images && item.images.length) ?
+      item.images.map(function(k){return '<img src="'+_baseURL+'/'+k+'" alt="'+esc(item.name)+'" loading="lazy">';}).join('') :
+      '<div class="img-placeholder" style="width:100%;aspect-ratio:1">&#x1F4F7;</div>';
+    el.innerHTML = '<div class="detail-header"><h2>'+esc(item.name)+'</h2><span class="status-badge status-'+cls(item.s)+'">'+esc(item.s)+'</span></div>' +
+      '<div class="detail-images">'+imgs+'</div><div class="detail-info">' +
+      (item.cat?'<div class="info-row"><span class="info-label">分类</span><span class="info-value">'+esc(item.cat)+'</span></div>':'') +
+      (item.seller?'<div class="info-row"><span class="info-label">商家</span><span class="info-value">'+esc(item.seller)+'</span></div>':'') +
+      (item.size?'<div class="info-row"><span class="info-label">尺寸</span><span class="info-value">'+esc(item.size)+'</span></div>':'') +
+      (item.pDate?'<div class="info-row"><span class="info-label">购买日期</span><span class="info-value">'+item.pDate+'</span></div>':'') +
+      (item.amount?'<div class="info-row"><span class="info-label">金额</span><span class="info-value">¥'+fmt(item.amount)+'</span></div>':'') +
+      (item.bDate?'<div class="info-row"><span class="info-label">补尾款时间</span><span class="info-value">'+item.bDate+'</span></div>':'') +
+      (item.bAmount?'<div class="info-row"><span class="info-label">尾款金额</span><span class="info-value">¥'+fmt(item.bAmount)+'</span></div>':'') +
+      (item.notes?'<div class="info-row info-notes"><span class="info-label">备注</span><p class="info-value">'+esc(item.notes)+'</p></div>':'') +
+      '</div>';
+    document.getElementById('detail-overlay').dataset.id = item.id;
+    document.getElementById('detail-overlay').classList.remove('hidden');
+  },
+
+  closeDetail: function() {
+    document.getElementById('detail-overlay').classList.add('hidden');
+  },
+
+  openForm: function(item) {
+    var isEdit = !!item;
+    this.editId = isEdit ? item.id : null;
+    this.removedKeys = [];
+    document.getElementById('form-title').textContent = isEdit ? '编辑藏品' : '添加藏品';
+    document.getElementById('f-name').value = isEdit ? (item.name||'') : '';
+    document.getElementById('f-category').value = isEdit ? (item.cat||'娃衣') : '娃衣';
+    document.getElementById('f-status').value = isEdit ? (item.s||'已入手') : '已入手';
+    document.getElementById('f-seller').value = isEdit ? (item.seller||'') : '';
+    document.getElementById('f-size').value = isEdit ? (item.size||'') : '';
+    document.getElementById('f-date').value = isEdit ? (item.pDate||'') : '';
+    document.getElementById('f-amount').value = isEdit ? (item.amount||'') : '';
+    document.getElementById('f-balance-date').value = isEdit ? (item.bDate||'') : '';
+    document.getElementById('f-balance-amount').value = isEdit ? (item.bAmount||'') : '';
+    document.getElementById('f-notes').value = isEdit ? (item.notes||'') : '';
+    document.getElementById('image-input').value = '';
+    var c = document.getElementById('form-images');
+    c.innerHTML = '';
+    if (isEdit && item.images) {
+      for (var i=0; i<item.images.length; i++) {
+        (function(k) {
+          c.innerHTML += '<div class="form-image-item" data-key="'+k+'"><img src="'+_baseURL+'/'+k+'" alt="图片"><button type="button" class="form-image-remove" onclick="App.removeExistingImg(\''+k+'\')">&#x2715;</button></div>';
+        })(item.images[i]);
+      }
+    }
+    document.getElementById('new-image-previews').innerHTML = '';
+    document.getElementById('form-overlay').classList.remove('hidden');
+  },
+
+  removeExistingImg: function(key) {
+    this.removedKeys.push(key);
+    var el = document.querySelector('.form-image-item[data-key="'+key+'"]');
+    if (el) el.remove();
+  },
+
+  closeForm: function() {
+    document.getElementById('form-overlay').classList.add('hidden');
+    this.editId = null;
+    this.removedKeys = [];
+  },
+
+  saveForm: async function() {
+    var data = {
+      name: document.getElementById('f-name').value.trim(),
+      cat: document.getElementById('f-category').value,
+      seller: document.getElementById('f-seller').value.trim(),
+      size: document.getElementById('f-size').value.trim(),
+      pDate: document.getElementById('f-date').value,
+      amount: parseFloat(document.getElementById('f-amount').value) || null,
+      bDate: document.getElementById('f-balance-date').value,
+      bAmount: parseFloat(document.getElementById('f-balance-amount').value) || null,
+      s: document.getElementById('f-status').value,
+      notes: document.getElementById('f-notes').value.trim()
+    };
+    if (!data.name) { this.toast('请填写藏品名称', 'error'); return; }
+
+    var btn = document.getElementById('form-save');
+    btn.disabled = true;
+    btn.textContent = '保存中...';
+
+    try {
+      var files = document.getElementById('image-input').files;
+
+      if (this.editId) {
+        // 编辑模式
+        var idx = this.items.findIndex(function(i){return i.id==App.editId;});
+        if (idx < 0) throw new Error('未找到该藏品');
+        var item = this.items[idx];
+
+        // 删除被移除的旧图片
+        if (this.removedKeys.length) {
+          for (var i=0; i<this.removedKeys.length; i++) {
+            await this._fetch('DELETE', this.removedKeys[i]);
+          }
+        }
+
+        // 上传新图片
+        var newKeys = [];
+        if (files.length) {
+          for (var i=0; i<files.length; i++) {
+            var ext = files[i].name.split('.').pop() || 'jpg';
+            var key = 'images/' + item.id + '/' + Date.now() + '_' + i + '.' + ext;
+            await this._fetch('PUT', key, files[i], files[i].type || 'image/jpeg');
+            newKeys.push(key);
+          }
+        }
+
+        var keptKeys = (item.images||[]).filter(function(k){return App.removedKeys.indexOf(k)<0;});
+        for (var k in data) item[k] = data[k];
+        item.images = keptKeys.concat(newKeys);
+        item.updateAt = Date.now();
+      } else {
+        // 新增模式
+        var id = 'bjd_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+        var imgKeys = [];
+        if (files.length) {
+          for (var i=0; i<files.length; i++) {
+            var ext = files[i].name.split('.').pop() || 'jpg';
+            var key = 'images/' + id + '/' + Date.now() + '_' + i + '.' + ext;
+            await this._fetch('PUT', key, files[i], files[i].type || 'image/jpeg');
+            imgKeys.push(key);
+          }
+        }
+        data.id = id;
+        data.images = imgKeys;
+        data.createAt = Date.now();
+        data.updateAt = Date.now();
+        this.items.push(data);
+      }
+
+      await this._saveItems();
+      this.closeForm();
+      this.render();
+      this.toast(this.editId ? '已更新' : '已添加', 'success');
+    } catch(e) {
+      console.error('保存失败:', e);
+      this.toast('保存失败：' + (e.message||'未知错误'), 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '保存';
+    }
+  },
+
+  deleteItem: async function(id) {
+    if (!confirm('确定要删除这件藏品吗？此操作不可撤销。')) return;
+    try {
+      var keys = await this._listObjects('images/'+id+'/');
+      if (keys.length) await this._deleteMulti(keys);
+      this.items = this.items.filter(function(i){return i.id!=id;});
+      await this._saveItems();
+      this.closeDetail();
+      this.render();
+      this.toast('已删除', 'info');
+    } catch(e) {
+      console.error('删除失败:', e);
+      this.toast('删除失败：'+ (e.message||'未知错误'), 'error');
+    }
+  },
+
+  changeConfig: function() {
+    if (confirm('修改配置将断开当前连接，确认？')) {
+      localStorage.removeItem('bjd_oss_config');
+      this.items = [];
+      document.getElementById('app-screen').classList.add('hidden');
+      document.getElementById('config-screen').classList.remove('hidden');
+    }
+  },
+
+  toast: function(msg, type, duration) {
+    type = type || 'info';
+    duration = duration || 3000;
+    var c = document.getElementById('toast-container');
+    var el = document.createElement('div');
+    el.className = 'toast toast--' + type;
+    el.textContent = msg;
+    c.appendChild(el);
+    setTimeout(function() {
+      el.style.opacity = '0';
+      el.style.transform = 'translateX(100%)';
+      setTimeout(function() { el.remove(); }, 300);
+    }, duration);
+  }
 };
 
-function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=s;return d.innerHTML}
-function fmt(v){if(v==null)return'';return v.toLocaleString('zh-CN',{minimumFractionDigits:2})}
-function cls(s){var m={'已入手':'owned','预购中':'preorder','已出售':'sold'};return m[s]||'owned'}
+// 事件绑定
+document.addEventListener('DOMContentLoaded', function() {
+  App.start();
 
-// ==================== 事件绑定 ====================
-document.addEventListener('DOMContentLoaded',function(){
-App.start();
-document.getElementById('connect-btn').onclick=function(){App.connect()};
-document.getElementById('add-btn').onclick=function(){App.openForm(null)};
-document.getElementById('form-save').onclick=function(){App.saveForm()};
-document.getElementById('form-cancel').onclick=function(){App.closeForm()};
-document.getElementById('detail-close').onclick=function(){App.closeDetail()};
-document.getElementById('detail-edit').onclick=function(){
-var id=document.getElementById('detail-overlay').dataset.id;var item=App.items.find(function(i){return i.id==id});if(item){App.closeDetail();App.openForm(item)}};
-document.getElementById('detail-delete').onclick=function(){
-var id=document.getElementById('detail-overlay').dataset.id;if(id)App.deleteItem(id)};
-document.getElementById('config-btn').onclick=function(){App.changeConfig()};
-document.getElementById('image-input').onchange=function(e){
-var c=document.getElementById('new-image-previews');c.innerHTML='';
-for(var i=0;i<e.target.files.length;i++){
-(function(file){
-var r=new FileReader();
-r.onload=function(ev){var d=document.createElement('div');d.className='form-image-item';d.innerHTML='<img src="'+ev.target.result+'" alt="新图片"><span class="form-image-label">新</span>';c.appendChild(d)};
-r.readAsDataURL(file)
-})(e.target.files[i])}};
-// 分类点击
-document.querySelector('.category-tabs').onclick=function(e){
-var tab=e.target.closest('.category-tab');if(!tab)return;
-document.querySelectorAll('.category-tab').forEach(function(t){t.classList.remove('active')});tab.classList.add('active');
-App.cat=tab.dataset.cat;App.renderGrid()};
-// 状态筛选
-document.getElementById('status-filter').onchange=function(){App.st=this.value;App.renderGrid()};
-// 搜索
-document.getElementById('search-input').oninput=function(){var me=this;clearTimeout(App._st);App._st=setTimeout(function(){App.search=me.value.trim();App.renderGrid()},300)};
-// 弹窗点击外部关闭
-document.getElementById('form-overlay').onclick=function(e){if(e.target==this)App.closeForm()};
-document.getElementById('detail-overlay').onclick=function(e){if(e.target==this)App.closeDetail()};
+  document.getElementById('add-btn').onclick = function() { App.openForm(null); };
+  document.getElementById('form-save').onclick = function() { App.saveForm(); };
+  document.getElementById('form-cancel').onclick = function() { App.closeForm(); };
+  document.getElementById('detail-close').onclick = function() { App.closeDetail(); };
+  document.getElementById('detail-edit').onclick = function() {
+    var id = document.getElementById('detail-overlay').dataset.id;
+    var item = App.items.find(function(i){return i.id==id;});
+    if (item) { App.closeDetail(); App.openForm(item); }
+  };
+  document.getElementById('detail-delete').onclick = function() {
+    var id = document.getElementById('detail-overlay').dataset.id;
+    if (id) App.deleteItem(id);
+  };
+  document.getElementById('config-btn').onclick = function() { App.changeConfig(); };
+
+  // 图片上传预览
+  document.getElementById('image-input').onchange = function(e) {
+    var c = document.getElementById('new-image-previews');
+    c.innerHTML = '';
+    for (var i=0; i<e.target.files.length; i++) {
+      (function(file) {
+        var r = new FileReader();
+        r.onload = function(ev) {
+          var d = document.createElement('div');
+          d.className = 'form-image-item';
+          d.innerHTML = '<img src="'+ev.target.result+'" alt="新图片"><span class="form-image-label">新</span>';
+          c.appendChild(d);
+        };
+        r.readAsDataURL(file);
+      })(e.target.files[i]);
+    }
+  };
+
+  // 分类点击
+  document.querySelector('.category-tabs').onclick = function(e) {
+    var tab = e.target.closest('.category-tab');
+    if (!tab) return;
+    document.querySelectorAll('.category-tab').forEach(function(t){t.classList.remove('active');});
+    tab.classList.add('active');
+    App.cat = tab.dataset.cat;
+    App._renderGrid();
+  };
+
+  // 状态筛选
+  document.getElementById('status-filter').onchange = function() {
+    App.st = this.value;
+    App._renderGrid();
+  };
+
+  // 搜索
+  document.getElementById('search-input').oninput = function() {
+    var me = this;
+    clearTimeout(App._st);
+    App._st = setTimeout(function() {
+      App.search = me.value.trim();
+      App._renderGrid();
+    }, 300);
+  };
+
+  // 弹窗点击外部关闭
+  document.getElementById('form-overlay').onclick = function(e) {
+    if (e.target === this) App.closeForm();
+  };
+  document.getElementById('detail-overlay').onclick = function(e) {
+    if (e.target === this) App.closeDetail();
+  };
 });
 </script>
 </body>
