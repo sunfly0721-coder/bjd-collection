@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BJD 收藏管理</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- 配置屏幕 -->
+  <div id="config-screen" class="config-screen">
+    <div class="config-card">
+      <h1>🐶 BJD 收藏管理</h1>
+      <p class="subtitle">连接到你的阿里云 OSS 以开始使用</p>
+
+      <form id="config-form" class="config-form">
+        <div>
+          <label for="config-bucket">Bucket 名称</label>
+          <input id="config-bucket" name="bucket" type="text"
+                 placeholder="例如：bjd-collection" required>
+          <p class="field-hint">OSS 控制台创建的 bucket 名称</p>
+        </div>
+
+        <div>
+          <label for="config-region">Region（地域）</label>
+          <input id="config-region" name="region" type="text"
+                 placeholder="例如：oss-cn-hangzhou" required>
+          <p class="field-hint">bucket 所在的地域，如 oss-cn-hangzhou / oss-cn-shanghai</p>
+        </div>
+
+        <div>
+          <label for="config-ak">AccessKey ID</label>
+          <input id="config-ak" name="accessKeyId" type="text"
+                 placeholder="RAM 子账号的 AccessKey ID" required>
+        </div>
+
+        <div>
+          <label for="config-sk">AccessKey Secret</label>
+          <input id="config-sk" name="accessKeySecret" type="password"
+                 placeholder="RAM 子账号的 AccessKey Secret" required>
+          <p class="field-hint">建议使用 RAM 子账号，权限仅限该 bucket</p>
+        </div>
+
+        <div id="config-error" class="config-error"></div>
+
+        <button type="button" id="connect-btn" class="btn-primary" onclick="App._onConnectClick()">连接 OSS</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 主应用 -->
+  <div id="app" class="app hidden">
+    <header class="header">
+      <h1>🐶 BJD 收藏</h1>
+      <div class="header-actions">
+        <button id="config-btn" class="btn-icon" title="修改 OSS 配置">⚙️</button>
+      </div>
+    </header>
+    <div id="stats-bar" class="stats-bar"></div>
+    <nav class="category-tabs">
+      <button class="category-tab active" data-category="all">全部</button>
+      <button class="category-tab" data-category="娃衣">娃衣</button>
+      <button class="category-tab" data-category="娃头">娃头</button>
+      <button class="category-tab" data-category="体子">体子</button>
+      <button class="category-tab" data-category="娃鞋">娃鞋</button>
+    </nav>
+    <div class="filters-bar">
+      <select id="status-filter">
+        <option value="all">全部状态</option>
+        <option value="已入手">已入手</option>
+        <option value="预购中">预购中</option>
+        <option value="已出售">已出售</option>
+      </select>
+      <input type="text" id="search-input" placeholder="🔍 搜索名称或商家…">
+    </div>
+    <div class="add-btn-row">
+      <button id="add-btn" class="btn-add">+ 添加藏品</button>
+    </div>
+    <div id="item-grid" class="item-grid"></div>
+  </div>
+
+  <!-- 表单弹窗 -->
+  <div id="form-overlay" class="overlay hidden">
+    <div class="form-modal">
+      <h2 id="form-title">添加藏品</h2>
+      <form id="item-form" class="item-form">
+        <div class="form-group">
+          <label for="item-name">藏品名称 *</label>
+          <input id="item-name" name="name" type="text" placeholder="例如：DZ 四分女体" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="item-category">分类</label>
+            <select id="item-category" name="category">
+              <option value="娃衣">娃衣</option>
+              <option value="娃头">娃头</option>
+              <option value="体子">体子</option>
+              <option value="娃鞋">娃鞋</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="item-status">状态</label>
+            <select id="item-status" name="status">
+              <option value="已入手">已入手</option>
+              <option value="预购中">预购中</option>
+              <option value="已出售">已出售</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="item-seller">商家名称</label>
+            <input id="item-seller" name="seller" type="text" placeholder="商家或工作室名称">
+          </div>
+          <div class="form-group">
+            <label for="item-size">尺寸</label>
+            <input id="item-size" name="size" type="text" placeholder="例如：四分 / 三分 / 六分">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="item-date">购买日期</label>
+            <input id="item-date" name="purchase-date" type="date">
+          </div>
+          <div class="form-group">
+            <label for="item-amount">金额 (¥)</label>
+            <input id="item-amount" name="amount" type="number" step="0.01" placeholder="0.00">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="item-balance-date">补尾款时间</label>
+            <input id="item-balance-date" name="balance-date" type="date">
+          </div>
+          <div class="form-group">
+            <label for="item-balance-amount">尾款金额 (¥)</label>
+            <input id="item-balance-amount" name="balance-amount" type="number" step="0.01" placeholder="0.00">
+          </div>
+        </div>
+        <div class="image-upload-area">
+          <label>图片</label>
+          <div class="upload-btn-wrapper">
+            <button type="button" class="upload-btn">📷 选择图片</button>
+            <input id="image-input" type="file" multiple accept="image/*">
+          </div>
+          <div id="form-images" class="form-images"></div>
+          <div id="new-image-previews" class="form-images"></div>
+        </div>
+        <div class="form-group full">
+          <label for="item-notes">备注</label>
+          <textarea id="item-notes" name="notes" placeholder="其他信息…"></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn-save">保存</button>
+          <button type="button" id="form-cancel" class="btn-cancel">取消</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 详情弹窗 -->
+  <div id="detail-overlay" class="overlay hidden">
+    <div class="detail-modal">
+      <div id="detail-body" class="detail-body"></div>
+      <div class="detail-actions">
+        <button id="detail-edit" class="btn-edit">✏️ 编辑</button>
+        <button id="detail-delete" class="btn-delete">🗑️ 删除</button>
+        <button id="detail-close" class="btn-close-detail">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 容器 -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- 脚本 -->
+  <script src="js/aliyun-oss-sdk.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/oss-client.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- 自包含连接处理器：即使外部脚本全部失败也能工作 -->
+  <script>
+    (function() {
+      var btn = document.getElementById('connect-btn');
+      var errEl = document.getElementById('config-error');
+      var STORAGE_KEY = 'bjd_oss_config';
+
+      if (!btn) return;
+
+      // 纯 JS HMAC-SHA1 - 不依赖任何浏览器 API / 外部库
+      function hmacSha1(key, data) {
+        function sha1(msg) {
+          function r(x, n) { return (x << n) | (x >>> (32 - n)); }
+          var bytes = [], i, c;
+          for (i = 0; i < msg.length; i++) {
+            c = msg.charCodeAt(i);
+            if (c < 0x80) bytes.push(c);
+            else if (c < 0x800) bytes.push(0xc0 | (c >> 6), 0x80 | (c & 0x3f));
+            else bytes.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f));
+          }
+          var blen = bytes.length;
+          bytes.push(0x80);
+          while (bytes.length % 64 !== 56) bytes.push(0);
+          var bits = blen * 8;
+          for (i = 7; i >= 0; i--) bytes.push((bits >>> (i * 8)) & 0xff);
+          var h = [0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0];
+          var w = [], off, a, b, c_, d, e, f, k, temp;
+          for (var block = 0; block < bytes.length / 64; block++) {
+            w.length = 0;
+            for (i = 0; i < 16; i++) {
+              off = block * 64 + i * 4;
+              w.push((bytes[off] << 24) | (bytes[off+1] << 16) | (bytes[off+2] << 8) | bytes[off+3]);
+            }
+            for (i = 16; i < 80; i++) w.push(r(w[i-3] ^ w[i-8] ^ w[i-14] ^ w[i-16], 1));
+            a = h[0]; b = h[1]; c_ = h[2]; d = h[3]; e = h[4];
+            for (i = 0; i < 80; i++) {
+              if (i < 20)      { f = (b & c_) | (~b & d);   k = 0x5A827999; }
+              else if (i < 40) { f = b ^ c_ ^ d;             k = 0x6ED9EBA1; }
+              else if (i < 60) { f = (b & c_) | (b & d) | (c_ & d); k = 0x8F1BBCDC; }
+              else             { f = b ^ c_ ^ d;             k = 0xCA62C1D6; }
+              temp = (r(a, 5) + f + e + k + w[i]) | 0;
+              e = d; d = c_; c_ = r(b, 30); b = a; a = temp;
+            }
+            h[0] = (h[0] + a) | 0; h[1] = (h[1] + b) | 0; h[2] = (h[2] + c_) | 0;
+            h[3] = (h[3] + d) | 0; h[4] = (h[4] + e) | 0;
+          }
+          var out = '';
+          for (i = 0; i < 5; i++) {
+            out += String.fromCharCode((h[i] >>> 24) & 0xff);
+            out += String.fromCharCode((h[i] >>> 16) & 0xff);
+            out += String.fromCharCode((h[i] >>> 8) & 0xff);
+            out += String.fromCharCode(h[i] & 0xff);
+          }
+          return out;
+        }
+        var k = key;
+        if (k.length > 64) k = sha1(k);
+        while (k.length < 64) k += '\x00';
+        var ipad = '', opad = '';
+        for (var i = 0; i < 64; i++) {
+          ipad += String.fromCharCode(k.charCodeAt(i) ^ 0x36);
+          opad += String.fromCharCode(k.charCodeAt(i) ^ 0x5c);
+        }
+        return btoa(sha1(opad + sha1(ipad + data)));
+      }
+
+      // 连接按钮点击处理
+      btn.onclick = function() {
+        errEl.textContent = '⏳ 正在配置…';
+
+        var bucket = document.getElementById('config-bucket').value.trim();
+        var region = document.getElementById('config-region').value.trim();
+        var ak = document.getElementById('config-ak').value.trim();
+        var sk = document.getElementById('config-sk').value.trim();
+
+        if (!bucket || !region || !ak || !sk) {
+          errEl.textContent = '请填写所有字段';
+          return;
+        }
+
+        errEl.textContent = '⏳ 正在连接 OSS…';
+
+        // 使用原生 fetch + 签名直调 OSS
+        var baseURL = 'https://' + bucket + '.' + region + '.aliyuncs.com';
+        var testKey = '_test_bjd_conn_.tmp';
+        var date = new Date().toUTCString();
+        var stringToSign = 'PUT\n\ntext/plain\n' + date + '\n/' + bucket + '/' + testKey;
+        var sig = hmacSha1(sk, stringToSign);
+
+        fetch(baseURL + '/' + testKey, {
+          method: 'PUT',
+          headers: {
+            'Date': date,
+            'Content-Type': 'text/plain',
+            'Authorization': 'OSS ' + ak + ':' + sig
+          },
+          body: 'ok'
+        }).then(function(resp) {
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+          // 测试成功，删除测试文件
+          var delDate = new Date().toUTCString();
+          var delStr = 'DELETE\n\ntext/plain\n' + delDate + '\n/' + bucket + '/' + testKey;
+          var delSig = hmacSha1(sk, delStr);
+          return fetch(baseURL + '/' + testKey, {
+            method: 'DELETE',
+            headers: {
+              'Date': delDate,
+              'Content-Type': 'text/plain',
+              'Authorization': 'OSS ' + ak + ':' + delSig
+            }
+          });
+        }).then(function() {
+          // 保存配置到 localStorage
+          var config = {
+            bucket: bucket,
+            region: region,
+            accessKeyId: ak,
+            accessKeySecret: sk
+          };
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+          } catch(e) {}
+          errEl.textContent = '✅ 连接成功！';
+          // 刷新页面，让 App 正常加载
+          setTimeout(function() { location.reload(); }, 500);
+        }).catch(function(e) {
+          var msg = '连接失败';
+          var s = (e.message || '').toLowerCase();
+          if (s.indexOf('403') !== -1 || s.indexOf('denied') !== -1) msg += '：权限不足，请确认 RAM 子账号有 AliyunOSSFullAccess 权限';
+          else if (s.indexOf('404') !== -1) msg += '：Bucket 不存在，请检查名称和 Region';
+          else if (s.indexOf('invalid') !== -1) msg += '：AccessKey 无效';
+          else if (s.indexOf('fetch') !== -1 || s.indexOf('network') !== -1) msg += '：网络请求失败，请检查 CORS 配置或网络';
+          else msg += '：' + (e.message || '未知错误');
+          errEl.textContent = msg;
+        });
+      };
+    })();
+  </script>
+</body>
+</html>
